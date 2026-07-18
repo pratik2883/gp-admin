@@ -1,0 +1,44 @@
+<ENVELOPE>
+    <HEADER>
+        <VERSION>1</VERSION>
+        <TALLYREQUEST>Export</TALLYREQUEST>
+        <TYPE>Collection</TYPE>
+        <ID>LedgerXpertSmartPrefetch</ID>
+    </HEADER>
+    <BODY>
+        <DESC>
+            <STATICVARIABLES>
+                <SVCURRENTCOMPANY>@@CompanyName</SVCURRENTCOMPANY>
+                <SVFROMDATE TYPE="Date">@@StartDate</SVFROMDATE>
+                <SVTODATE TYPE="Date">@@EndDate</SVTODATE>
+                <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>
+                <SVLEDGERNAME>@@BankLedgerName</SVLEDGERNAME>
+            </STATICVARIABLES>
+
+            <TDLMESSAGE>
+                <COLLECTION NAME="LedgerXpertSmartPrefetch">
+                    <TYPE>Vouchers : Ledger</TYPE>
+                    <CHILDOF>##SVLEDGERNAME</CHILDOF>
+
+                    <FETCH>GUID</FETCH>
+                    <FETCH>MASTERID</FETCH>
+                    <FETCH>DATE</FETCH>
+                    <FETCH>VOUCHERNUMBER</FETCH>
+                    <FETCH>VOUCHERTYPENAME</FETCH>
+                    <FETCH>NARRATION</FETCH>
+                    <FETCH>REFERENCE</FETCH>
+
+                    <FETCH>ALLLEDGERENTRIES.LIST</FETCH>
+                    <FETCH>ALLLEDGERENTRIES.LEDGERNAME</FETCH>
+                    <FETCH>ALLLEDGERENTRIES.AMOUNT</FETCH>
+                    <FETCH>ALLLEDGERENTRIES.ISDEEMEDPOSITIVE</FETCH>
+
+                    <FETCH>ALLLEDGERENTRIES.BANKALLOCATIONS.LIST</FETCH>
+                    <FETCH>ALLLEDGERENTRIES.BANKALLOCATIONS.DATE</FETCH>
+                    <FETCH>ALLLEDGERENTRIES.BANKALLOCATIONS.INSTRUMENTNUMBER</FETCH>
+                    <FETCH>ALLLEDGERENTRIES.BANKALLOCATIONS.TRANSACTIONTYPE</FETCH>
+                </COLLECTION>
+            </TDLMESSAGE>
+        </DESC>
+    </BODY>
+</ENVELOPE>

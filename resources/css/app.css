@@ -1,0 +1,9 @@
+/* Filament theme overrides (no Tailwind preflight to avoid conflicts) */
+.fi-stats-overview-stat {
+    border-radius: 18px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.fi-widget .fi-card {
+    border-radius: 18px;
+}

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Referral Details - Clinical Curator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#7a3000",
+              "secondary-fixed-dim": "#b5c6f5",
+              "on-secondary-fixed-variant": "#36466d",
+              "secondary": "#4e5d86",
+              "outline-variant": "#c3c6d5",
+              "error": "#ba1a1a",
+              "surface-dim": "#d9dadd",
+              "outline": "#737784",
+              "primary-fixed": "#d9e2ff",
+              "on-surface-variant": "#434653",
+              "on-primary-container": "#c5d4ff",
+              "primary-fixed-dim": "#b1c5ff",
+              "primary": "#003f98",
+              "on-background": "#191c1e",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#00419d",
+              "on-error-container": "#93000a",
+              "surface-container-lowest": "#ffffff",
+              "inverse-primary": "#b1c5ff",
+              "inverse-surface": "#2e3133",
+              "surface-bright": "#f8f9fc",
+              "on-secondary-fixed": "#061a3f",
+              "surface-container-highest": "#e1e2e5",
+              "surface-variant": "#e1e2e5",
+              "primary-container": "#1a56be",
+              "error-container": "#ffdad6",
+              "on-surface": "#191c1e",
+              "on-primary": "#ffffff",
+              "surface-container": "#edeef1",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed-dim": "#ffb693",
+              "on-secondary-container": "#475780",
+              "on-primary-fixed": "#001946",
+              "inverse-on-surface": "#f0f1f4",
+              "tertiary-container": "#9c3f00",
+              "secondary-fixed": "#d9e2ff",
+              "on-secondary": "#ffffff",
+              "secondary-container": "#becefd",
+              "surface-tint": "#1f59c1",
+              "tertiary": "#762e00",
+              "surface-container-low": "#f2f3f6",
+              "surface": "#f8f9fc",
+              "on-tertiary-container": "#ffc9b0",
+              "background": "#f8f9fc",
+              "on-tertiary-fixed": "#351000",
+              "surface-container-high": "#e7e8eb",
+              "tertiary-fixed": "#ffdbcc"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Manrope', sans-serif;
+        background-color: #f8f9fc;
+      }
+      .asymmetric-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 22.4px;
+      }
+      @media (max-width: 1024px) {
+        .asymmetric-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-20 bg-gradient-to-r from-[#003f98] to-[#1a56be] shadow-lg shadow-[#003f98]/20 rounded-b-[24px]">
+<div class="flex items-center gap-4">
+<button class="text-white hover:bg-white/10 p-2 rounded-full transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Manrope'] headline-lg text-2xl font-bold tracking-tight text-white">Referral Details</h1>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-white/80 font-medium hidden md:block">Dr. Julian Vance</span>
+<img alt="Senior Physician Avatar" class="w-10 h-10 rounded-full border-2 border-white/20" data-alt="Close-up portrait of a senior male physician with gray hair and kind eyes wearing a professional white coat and stethoscope" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBc-hNV-jzAOFaDbBWQqeToziQH8rP5v1-WNo-lvKe3MfchWxiyafIY83SbvF3KcAqK9pjv1o4Vf7BqLavGfhWW4doQl_UxH_YG1Ys-hgVXS15EysBj9R16OALQTlq9bQfUBIVGOqbAZITAlioyGNch4dAYTARG06nELF6ShNRAYFLbiheFujz73-arUmrOr0tyrRT28rVe3dWR7lSxpeiW_QyUU6CsKIKMDkXZywcoNUFXdXhopSvDsd5Iul5WGXvtYdaxuXpPf9nz"/>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 mt-28 mb-12">
+<!-- Header Section with Patient Identity -->
+<div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+<div>
+<div class="inline-flex items-center px-4 py-1.5 rounded-full bg-tertiary-container text-on-tertiary-container text-sm font-bold mb-4 tracking-wide">
+                    URGENT REVIEW
+                </div>
+<h2 class="text-4xl font-extrabold text-on-surface tracking-tighter mb-2">Arthur C. Sterling</h2>
+<p class="text-on-surface-variant body-lg flex items-center gap-3">
+<span class="font-semibold">Case ID: #REF-8832-X</span>
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+<span>Last Updated: 2h ago</span>
+</p>
+</div>
+<div class="flex gap-3">
+<div class="bg-surface-container-high px-6 py-4 rounded-xl flex flex-col items-center">
+<span class="text-xs font-bold text-primary tracking-widest uppercase">Age</span>
+<span class="text-2xl font-extrabold">68</span>
+</div>
+<div class="bg-surface-container-high px-6 py-4 rounded-xl flex flex-col items-center">
+<span class="text-xs font-bold text-primary tracking-widest uppercase">Sex</span>
+<span class="text-2xl font-extrabold">M</span>
+</div>
+<div class="bg-surface-container-high px-6 py-4 rounded-xl flex flex-col items-center">
+<span class="text-xs font-bold text-primary tracking-widest uppercase">Weight</span>
+<span class="text-2xl font-extrabold">74kg</span>
+</div>
+</div>
+</div>
+<div class="asymmetric-grid">
+<!-- Left Column: Primary Medical Data -->
+<div class="space-y-6">
+<!-- Case Summary Card -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<h3 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
+                        Case Summary
+                    </h3>
+<div class="prose prose-slate max-w-none">
+<p class="text-on-surface leading-relaxed text-lg mb-6">
+                            Patient presents with persistent atrial fibrillation and recent-onset dyspnea during moderate exertion. History includes managed hypertension (Lisinopril 10mg) and mild osteoarthritis. Recent EKG shows new ST-segment changes in lateral leads.
+                        </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-surface-container-low p-6 rounded-lg">
+<div>
+<h4 class="text-xs font-bold text-outline uppercase tracking-widest mb-2">Primary Diagnosis</h4>
+<p class="font-bold text-on-surface">Unstable Angina Pectoris</p>
+</div>
+<div>
+<h4 class="text-xs font-bold text-outline uppercase tracking-widest mb-2">Comorbidities</h4>
+<p class="font-bold text-on-surface">Type 2 Diabetes, HTN</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Patient Bio & History -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<h3 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+                        Patient Profile
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-4">
+<div class="flex justify-between items-center py-2 border-b border-surface-container">
+<span class="text-on-surface-variant font-medium">Blood Type</span>
+<span class="font-bold text-on-surface">A+ Positive</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-container">
+<span class="text-on-surface-variant font-medium">Allergies</span>
+<span class="font-bold text-error">Penicillin, Latex</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-container">
+<span class="text-on-surface-variant font-medium">Smoker</span>
+<span class="font-bold text-on-surface">Former (Quit 2012)</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center py-2 border-b border-surface-container">
+<span class="text-on-surface-variant font-medium">Language</span>
+<span class="font-bold text-on-surface">English, Spanish</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-container">
+<span class="text-on-surface-variant font-medium">Primary Care</span>
+<span class="font-bold text-on-surface">Mercy General</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-container">
+<span class="text-on-surface-variant font-medium">Occupation</span>
+<span class="font-bold text-on-surface">Retired Architect</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Contextual Info & Reports -->
+<div class="space-y-6">
+<!-- Referring Physician Card -->
+<section class="bg-primary text-white p-8 rounded-xl shadow-lg shadow-primary/10">
+<h3 class="text-white/70 text-xs font-bold uppercase tracking-[0.2em] mb-6">Referring Clinician</h3>
+<div class="flex items-center gap-4 mb-6">
+<img alt="Referring Doctor" class="w-16 h-16 rounded-full border-2 border-white/30 object-cover" data-alt="Professional headshot of a female doctor in a blue scrubs with a confident smile against a clean clinical background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvm-x_NwFIAs8iumN5x9eHGTiSQUpzcc7ChLgiArv9TueV_cPzWaT2OT2i1SNwB137PXE4OW4xes0jlzuduMLONeT_Jqh81qo_YofRPdklPMTAT97_tupKH_KXZVsCceBy4BlGbpEjwV4a8eeloFeDhQN1-iqzbj6uoN3N3SygFa3IRXc6gJm9ThG5wXOraJmmHlFZmYdbJICGFpaGPlcSN9uVPZZ3-a5whIWN_SY6P-tM8bZucfJ8iSeINZtSMnZOTT7TawYqzjMB"/>
+<div>
+<h4 class="text-xl font-extrabold leading-tight">Dr. Elena Rodriguez</h4>
+<p class="text-white/80">Internal Medicine Specialist</p>
+</div>
+</div>
+<div class="space-y-3">
+<button class="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 transition-colors py-3 rounded-lg font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="call">call</span>
+                            Direct Contact
+                        </button>
+<button class="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 transition-colors py-3 rounded-lg font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="mail">mail</span>
+                            Secure Message
+                        </button>
+</div>
+</section>
+<!-- Reports Bento Grid -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="folder_zip">folder_zip</span>
+                            Reports
+                        </h3>
+<span class="text-xs font-bold text-outline">4 Files</span>
+</div>
+<div class="space-y-3">
+<div class="group flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-red-100 flex items-center justify-center text-red-600">
+<span class="material-symbols-outlined" data-icon="picture_as_pdf">picture_as_pdf</span>
+</div>
+<div>
+<p class="font-bold text-on-surface text-sm">Cardiac_EKG_Result.pdf</p>
+<p class="text-xs text-on-surface-variant">2.4 MB • Oct 12, 2023</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary" data-icon="download">download</span>
+</div>
+<div class="group flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-blue-100 flex items-center justify-center text-blue-600">
+<span class="material-symbols-outlined" data-icon="image">image</span>
+</div>
+<div>
+<p class="font-bold text-on-surface text-sm">Chest_Xray_Lateral.jpg</p>
+<p class="text-xs text-on-surface-variant">8.1 MB • Oct 11, 2023</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary" data-icon="visibility">visibility</span>
+</div>
+<div class="group flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-green-100 flex items-center justify-center text-green-600">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+<div>
+<p class="font-bold text-on-surface text-sm">Lab_Bloodwork_Full.pdf</p>
+<p class="text-xs text-on-surface-variant">1.2 MB • Oct 10, 2023</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary" data-icon="download">download</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Fixed Action Bar -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-white/85 backdrop-blur-md border-t border-slate-100 p-6 shadow-[0_-8px_24px_rgba(0,0,0,0.06)]">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Secondary Action: Consulted -->
+<button class="flex items-center justify-center gap-3 h-14 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                Mark Consulted
+            </button>
+<!-- Primary Action: Accept -->
+<button class="flex items-center justify-center gap-3 h-14 rounded-xl bg-gradient-to-r from-[#003f98] to-[#1a56be] text-white font-extrabold text-lg shadow-lg shadow-primary/25 hover:brightness-110 transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="assignment_turned_in">assignment_turned_in</span>
+                Accept Case
+            </button>
+<!-- Alert Action: Close -->
+<button class="flex items-center justify-center gap-3 h-14 rounded-xl bg-error-container text-on-error-container font-bold hover:bg-red-100 transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="cancel">cancel</span>
+                Close Case
+            </button>
+</div>
+</div>
+</body></html>

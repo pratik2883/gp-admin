@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Referrals - GP Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary": "#762e00",
+              "on-error-container": "#93000a",
+              "secondary-container": "#becefd",
+              "on-tertiary-fixed-variant": "#7a3000",
+              "surface-container-highest": "#e1e2e5",
+              "on-tertiary": "#ffffff",
+              "on-primary-container": "#c5d4ff",
+              "inverse-surface": "#2e3133",
+              "error-container": "#ffdad6",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-low": "#f2f3f6",
+              "surface-container": "#edeef1",
+              "error": "#ba1a1a",
+              "outline": "#737784",
+              "tertiary-fixed": "#ffdbcc",
+              "secondary": "#4e5d86",
+              "on-tertiary-fixed": "#351000",
+              "on-secondary-container": "#475780",
+              "secondary-fixed-dim": "#b5c6f5",
+              "on-secondary": "#ffffff",
+              "surface-dim": "#d9dadd",
+              "on-error": "#ffffff",
+              "on-background": "#191c1e",
+              "primary-container": "#1a56be",
+              "surface-container-high": "#e7e8eb",
+              "primary-fixed": "#d9e2ff",
+              "tertiary-fixed-dim": "#ffb693",
+              "inverse-primary": "#b1c5ff",
+              "surface-bright": "#f8f9fc",
+              "on-primary-fixed": "#001946",
+              "secondary-fixed": "#d9e2ff",
+              "primary": "#003f98",
+              "on-secondary-fixed": "#061a3f",
+              "on-surface-variant": "#434653",
+              "primary-fixed-dim": "#b1c5ff",
+              "on-tertiary-container": "#ffc9b0",
+              "background": "#f8f9fc",
+              "on-surface": "#191c1e",
+              "surface-tint": "#1f59c1",
+              "on-secondary-fixed-variant": "#36466d",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#00419d",
+              "inverse-on-surface": "#f0f1f4",
+              "surface": "#f8f9fc",
+              "tertiary-container": "#9c3f00",
+              "outline-variant": "#c3c6d5",
+              "surface-variant": "#e1e2e5"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Manrope', sans-serif;
+      }
+      .asymmetric-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+      }
+      @media (max-width: 768px) {
+        .asymmetric-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-gradient-to-br from-[#003f98] to-[#1a56be] rounded-b-[24px] w-full flex items-center justify-between px-6 py-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)] sticky top-0 z-40">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
+<img alt="Senior Surgeon Portrait" class="w-full h-full object-cover" data-alt="Professional headshot of a mature male doctor in a white coat with a friendly, authoritative expression in a clinical setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoK8lOW3J2x2_GlFzrnioFIsHBZNH-lgY5QBEWqygMFjct8oCmUL2jy4D_jN8QtRHW7q0S5CyyCPm_Bzd17nszJlHUolbf-oPOs4lQ1z5OZa0METxgFc7tuL7KxcxS6R3aZ5fRn2y4R7D9-7nVebYykyKnynuH8l28HtR896VAz-ZzO7XJdKUwkvIj-0om8m31gcp63m_8K6Sz6HY-uNiC6YCM1mBXCapK2ev6aDmJLGmzcRm5oDOe7TMXhsCCVfLiJjk7gDAneHdr"/>
+</div>
+<h1 class="text-white font-['Manrope'] tracking-tight font-bold text-2xl">My Referrals</h1>
+</div>
+<div class="flex gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-white hover:bg-white/10 transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+</header>
+<main class="px-6 py-8 max-w-5xl mx-auto space-y-12">
+<!-- Summary Stats (Editorial Layout) -->
+<section class="asymmetric-grid gap-6">
+<div class="space-y-2">
+<p class="text-on-surface-variant font-medium tracking-wide">TOTAL SUBMITTED</p>
+<h2 class="text-5xl font-extrabold text-on-surface tracking-tighter">42</h2>
+<p class="text-on-surface-variant/70 text-sm">Active referrals this quarter</p>
+</div>
+<div class="bg-surface-container-low rounded-xl p-6 flex flex-col justify-center">
+<div class="flex justify-between items-end">
+<div>
+<span class="text-sm font-bold text-primary tracking-widest block mb-1">CONVERSION RATE</span>
+<span class="text-3xl font-bold">64%</span>
+</div>
+<div class="text-right">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">analytics</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Referral List -->
+<section class="space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-2xl font-bold tracking-tight text-on-surface">Recent Referrals</h3>
+<span class="text-primary font-bold text-sm">VIEW ALL</span>
+</div>
+<!-- Referral Card 1: Accepted -->
+<article class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:bg-surface-bright transition-colors group">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+<div class="space-y-1 flex-1">
+<div class="flex items-center gap-3">
+<h4 class="text-2xl font-extrabold text-on-surface tracking-tight">Elena Vance</h4>
+<span class="px-3 py-1 bg-[#d1e7dd] text-[#0f5132] rounded-full text-xs font-bold tracking-wide">Accepted</span>
+</div>
+<p class="text-on-surface-variant text-lg">Referred: Oct 24, 2023</p>
+</div>
+<div class="text-right md:text-right">
+<div class="inline-flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined text-primary text-sm">medical_services</span>
+<span class="text-sm font-semibold text-on-surface">Dr. Sarah Jenkins</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-2">St. Jude Medical Center • Oncology</p>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<button class="text-primary font-bold flex items-center gap-2 hover:translate-x-1 transition-transform">
+<span class="text-sm">View Patient Notes</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+<span class="material-symbols-outlined text-surface-container-highest">more_horiz</span>
+</div>
+</article>
+<!-- Referral Card 2: Pending -->
+<article class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:bg-surface-bright transition-colors group">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+<div class="space-y-1 flex-1">
+<div class="flex items-center gap-3">
+<h4 class="text-2xl font-extrabold text-on-surface tracking-tight">Marcus Thorne</h4>
+<span class="px-3 py-1 bg-[#fff3cd] text-[#664d03] rounded-full text-xs font-bold tracking-wide">Pending</span>
+</div>
+<p class="text-on-surface-variant text-lg">Referred: Oct 26, 2023</p>
+</div>
+<div class="text-right md:text-right">
+<div class="inline-flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined text-primary text-sm">medical_services</span>
+<span class="text-sm font-semibold text-on-surface">Dr. Amit Mehta</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-2">Central Cardiac Clinic • Cardiology</p>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<button class="text-primary font-bold flex items-center gap-2 hover:translate-x-1 transition-transform">
+<span class="text-sm">Expedite Request</span>
+<span class="material-symbols-outlined text-sm">bolt</span>
+</button>
+<span class="material-symbols-outlined text-surface-container-highest">more_horiz</span>
+</div>
+</article>
+<!-- Referral Card 3: Declined -->
+<article class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:bg-surface-bright transition-colors group">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+<div class="space-y-1 flex-1">
+<div class="flex items-center gap-3">
+<h4 class="text-2xl font-extrabold text-on-surface tracking-tight">Julia Ortega</h4>
+<span class="px-3 py-1 bg-[#f8d7da] text-[#842029] rounded-full text-xs font-bold tracking-wide">Declined</span>
+</div>
+<p class="text-on-surface-variant text-lg">Referred: Oct 22, 2023</p>
+</div>
+<div class="text-right md:text-right">
+<div class="inline-flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined text-primary text-sm">medical_services</span>
+<span class="text-sm font-semibold text-on-surface">Dr. Lisa Ray</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-2">Dermatology Associates • Clinical</p>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<button class="text-error font-bold flex items-center gap-2 hover:translate-x-1 transition-transform">
+<span class="text-sm">Review Reason</span>
+<span class="material-symbols-outlined text-sm">feedback</span>
+</button>
+<span class="material-symbols-outlined text-surface-container-highest">more_horiz</span>
+</div>
+</article>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-8 pt-4 bg-white/85 backdrop-blur-[12px] dark:bg-slate-900/85 z-50 border-t border-transparent">
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 opacity-60 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-xl px-4 py-2 transition-all active:opacity-70" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Manrope'] text-[14px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#003f98] dark:text-blue-300 font-bold scale-110 px-4 py-2 rounded-xl transition-all active:opacity-70" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment_turned_in</span>
+<span class="font-['Manrope'] text-[14px] font-medium">Referrals</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 opacity-60 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-xl px-4 py-2 transition-all active:opacity-70" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Manrope'] text-[14px] font-medium">Profile</span>
+</a>
+</nav>
+<!-- Floating Action Button (FAB) - For Home/Main Dashboard context as per rules -->
+<div class="fixed right-6 bottom-32 md:right-12 md:bottom-32">
+<button class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary-container text-white shadow-xl flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+</body></html>

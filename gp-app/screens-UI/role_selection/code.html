@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clinical Curator - Role Selection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#7a3000",
+              "secondary-fixed-dim": "#b5c6f5",
+              "on-secondary-fixed-variant": "#36466d",
+              "secondary": "#4e5d86",
+              "outline-variant": "#c3c6d5",
+              "error": "#ba1a1a",
+              "surface-dim": "#d9dadd",
+              "outline": "#737784",
+              "primary-fixed": "#d9e2ff",
+              "on-surface-variant": "#434653",
+              "on-primary-container": "#c5d4ff",
+              "primary-fixed-dim": "#b1c5ff",
+              "primary": "#003f98",
+              "on-background": "#191c1e",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#00419d",
+              "on-error-container": "#93000a",
+              "surface-container-lowest": "#ffffff",
+              "inverse-primary": "#b1c5ff",
+              "inverse-surface": "#2e3133",
+              "surface-bright": "#f8f9fc",
+              "on-secondary-fixed": "#061a3f",
+              "surface-container-highest": "#e1e2e5",
+              "surface-variant": "#e1e2e5",
+              "primary-container": "#1a56be",
+              "error-container": "#ffdad6",
+              "on-surface": "#191c1e",
+              "on-primary": "#ffffff",
+              "surface-container": "#edeef1",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed-dim": "#ffb693",
+              "on-secondary-container": "#475780",
+              "on-primary-fixed": "#001946",
+              "inverse-on-surface": "#f0f1f4",
+              "tertiary-container": "#9c3f00",
+              "secondary-fixed": "#d9e2ff",
+              "on-secondary": "#ffffff",
+              "secondary-container": "#becefd",
+              "surface-tint": "#1f59c1",
+              "tertiary": "#762e00",
+              "surface-container-low": "#f2f3f6",
+              "surface": "#f8f9fc",
+              "on-tertiary-container": "#ffc9b0",
+              "background": "#f8f9fc",
+              "on-tertiary-fixed": "#351000",
+              "surface-container-high": "#e7e8eb",
+              "tertiary-fixed": "#ffdbcc"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "3xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-effect {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased overflow-x-hidden">
+<!-- Top Navigation (Shell Suppressed/Simplified for Transactional Screen) -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-20 bg-gradient-to-r from-[#003f98] to-[#1a56be] shadow-lg shadow-[#003f98]/20 rounded-b-[24px]">
+<div class="flex items-center gap-4">
+<span class="text-2xl font-extrabold text-white tracking-tighter">Clinical Curator</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30 overflow-hidden">
+<span class="material-symbols-outlined text-white">medical_services</span>
+</div>
+</header>
+<main class="min-h-screen pt-32 pb-12 px-6 max-w-2xl mx-auto flex flex-col justify-center">
+<!-- Editorial Header Section -->
+<section class="mb-12 text-left">
+<h1 class="font-headline text-4xl md:text-5xl font-extrabold text-on-surface tracking-tight leading-tight mb-4">
+                Welcome, Doctor. <br/>
+<span class="text-primary">Choose Your Role.</span>
+</h1>
+<p class="text-on-surface-variant text-lg md:text-xl font-medium max-w-md">
+                Select your clinical focus to customize your referral dashboard and patient management tools.
+            </p>
+</section>
+<!-- Role Selection Cards -->
+<div class="space-y-6">
+<!-- Option 1: GP -->
+<button class="group w-full text-left bg-surface-container-lowest p-8 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-primary/10 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+<div class="flex items-center gap-6">
+<div class="w-20 h-20 rounded-2xl bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">home_health</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold text-on-surface tracking-tight">General Practitioner (GP)</h2>
+<p class="text-on-surface-variant font-medium mt-1">Initiate and track outward referrals</p>
+</div>
+</div>
+<div class="hidden md:block">
+<span class="material-symbols-outlined text-primary-fixed-dim text-4xl group-hover:translate-x-2 transition-transform">chevron_right</span>
+</div>
+</button>
+<!-- Option 2: Specialist -->
+<button class="group w-full text-left bg-surface-container-lowest p-8 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-primary/10 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+<div class="flex items-center gap-6">
+<div class="w-20 h-20 rounded-2xl bg-secondary-fixed flex items-center justify-center text-secondary group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">assignment_ind</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold text-on-surface tracking-tight">Specialist</h2>
+<p class="text-on-surface-variant font-medium mt-1">Receive and manage incoming cases</p>
+</div>
+</div>
+<div class="hidden md:block">
+<span class="material-symbols-outlined text-primary-fixed-dim text-4xl group-hover:translate-x-2 transition-transform">chevron_right</span>
+</div>
+</button>
+</div>
+<!-- Call to Action Footer -->
+<div class="mt-12">
+<button class="w-full h-16 bg-gradient-to-br from-[#003f98] to-[#1a56be] text-white rounded-2xl font-bold text-lg shadow-lg shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                Continue to Dashboard
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<p class="text-center mt-6 text-on-surface-variant font-medium text-sm">
+                Already have an account? <a class="text-primary font-bold hover:underline" href="#">Log In</a>
+</p>
+</div>
+<!-- Decorative Asymmetric Element -->
+<div class="fixed -bottom-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+</main>
+<!-- Visual Polish: Subtle Background Pattern -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] -z-20" style="background-image: radial-gradient(#003f98 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
+</body></html>

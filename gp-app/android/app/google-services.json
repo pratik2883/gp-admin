@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "702258131869",
+    "project_id": "gp-specialist",
+    "storage_bucket": "gp-specialist.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:702258131869:android:c8467508bb3152c695b574",
+        "android_client_info": {
+          "package_name": "gp.specialit.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5yfwp27zsTT3QHSEwAHNRQrv93yjD-wg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

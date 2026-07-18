@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#7a3000",
+              "secondary-fixed-dim": "#b5c6f5",
+              "on-secondary-fixed-variant": "#36466d",
+              "secondary": "#4e5d86",
+              "outline-variant": "#c3c6d5",
+              "error": "#ba1a1a",
+              "surface-dim": "#d9dadd",
+              "outline": "#737784",
+              "primary-fixed": "#d9e2ff",
+              "on-surface-variant": "#434653",
+              "on-primary-container": "#c5d4ff",
+              "primary-fixed-dim": "#b1c5ff",
+              "primary": "#003f98",
+              "on-background": "#191c1e",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#00419d",
+              "on-error-container": "#93000a",
+              "surface-container-lowest": "#ffffff",
+              "inverse-primary": "#b1c5ff",
+              "inverse-surface": "#2e3133",
+              "surface-bright": "#f8f9fc",
+              "on-secondary-fixed": "#061a3f",
+              "surface-container-highest": "#e1e2e5",
+              "surface-variant": "#e1e2e5",
+              "primary-container": "#1a56be",
+              "error-container": "#ffdad6",
+              "on-surface": "#191c1e",
+              "on-primary": "#ffffff",
+              "surface-container": "#edeef1",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed-dim": "#ffb693",
+              "on-secondary-container": "#475780",
+              "on-primary-fixed": "#001946",
+              "inverse-on-surface": "#f0f1f4",
+              "tertiary-container": "#9c3f00",
+              "secondary-fixed": "#d9e2ff",
+              "on-secondary": "#ffffff",
+              "secondary-container": "#becefd",
+              "surface-tint": "#1f59c1",
+              "tertiary": "#762e00",
+              "surface-container-low": "#f2f3f6",
+              "surface": "#f8f9fc",
+              "on-tertiary-container": "#ffc9b0",
+              "background": "#f8f9fc",
+              "on-tertiary-fixed": "#351000",
+              "surface-container-high": "#e7e8eb",
+              "tertiary-fixed": "#ffdbcc"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-20 bg-gradient-to-r from-[#003f98] to-[#1a56be] shadow-lg shadow-[#003f98]/20 rounded-b-[24px]">
+<div class="flex items-center gap-4">
+<button class="text-white hover:bg-white/10 p-2 rounded-full transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Manrope'] headline-lg text-2xl font-bold tracking-tight text-white">My Profile</h1>
+</div>
+<div class="flex items-center">
+<img alt="Senior Physician Avatar" class="w-10 h-10 rounded-full border-2 border-white/20" data-alt="close-up portrait of a senior male physician with grey hair and glasses, wearing a white clinical coat, soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsShgn19uzg4olfEM18CjNadmKmWCE8oKwaeK8Yr10VZCibaXDiz1xIiz_FWXES3SZAHvamxlh5LDAchESqrdJE8Q6IRyVr7Qmuz4-OGw7vV9kqDvjXu7oabcbQQh5HmLKZ_lzh9qYdiqJd3ydcjoEuTWpnunM_vX-o3VvsYDPJTStvtKjl3PE__PCQT3V2jIByiR0LffPrR_5hxlNE0Mqd3ctKjawQbUMNjEXaYn6fR0BQeVqqtCNqp5LbudjGY9zFEkQlkcabvuK"/>
+</div>
+</header>
+<main class="pt-28 px-6 max-w-2xl mx-auto">
+<!-- Hero Profile Section -->
+<section class="mb-10 text-center md:text-left md:flex md:items-center md:gap-8">
+<div class="relative inline-block mb-4 md:mb-0">
+<div class="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-gradient-to-tr from-primary to-primary-container">
+<img alt="Dr. Julian Sterling" class="w-full h-full rounded-full object-cover border-4 border-surface" data-alt="professional headshot of a mature doctor with a warm smile, wearing a blue stethoscope, high-end medical office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAL__Xp_wYIPrDhYiuyi4L1fkd11Rh0WdeAyrqxt_66qcjfpm6r1sbl12q5jkGyL_JaRq2pFWblxmed3ztPs_xElfWTBzh_B6gaYXRkYsD1uTql6BQF9bifpCm0awKBND1JtbmDhwXLRknMDw-4fJKPieyjr8VAYWWSmrASABVjPalyrf8y4JUid38sk_pwNuGP0uP_UctIo55HypFXLGiO9WyC6x4wGyyq1vDemioOA9l3BkitJxiP5GFdeIbm-uPQqxzr93bwEheV"/>
+</div>
+<div class="absolute bottom-1 right-1 bg-primary text-white p-2 rounded-full shadow-lg">
+<span class="material-symbols-outlined text-sm" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="flex-1">
+<h2 class="text-3xl font-extrabold tracking-tight text-on-surface mb-1">Dr. Julian Sterling</h2>
+<p class="text-primary font-semibold text-lg mb-2">Senior Consultant Cardiologist</p>
+<div class="inline-flex items-center px-3 py-1 bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-sm mr-2 text-outline" data-icon="id_card">id_card</span>
+<span class="text-on-surface-variant font-mono font-medium tracking-wider uppercase">REG-99203841</span>
+</div>
+</div>
+</section>
+<!-- Stats Grid (Bento Style) -->
+<div class="grid grid-cols-2 gap-4 mb-10">
+<div class="bg-surface-container-lowest p-6 rounded-[24px] shadow-sm flex flex-col items-start gap-2 border-l-4 border-primary">
+<span class="text-outline text-sm font-semibold uppercase tracking-widest">Active Referrals</span>
+<span class="text-3xl font-extrabold text-on-surface">24</span>
+</div>
+<div class="bg-surface-container-low p-6 rounded-[24px] flex flex-col items-start gap-2">
+<span class="text-outline text-sm font-semibold uppercase tracking-widest">Success Rate</span>
+<span class="text-3xl font-extrabold text-primary">98%</span>
+</div>
+</div>
+<!-- Menu Section -->
+<nav class="space-y-4">
+<h3 class="text-outline text-xs font-bold uppercase tracking-[0.2em] px-2 mb-4">Preference &amp; Security</h3>
+<a class="group flex items-center justify-between p-5 bg-surface-container-lowest hover:bg-surface-container-low rounded-[20px] transition-all active:scale-[0.98]" href="#">
+<div class="flex items-center gap-5">
+<div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="manage_accounts">manage_accounts</span>
+</div>
+<div>
+<p class="text-lg font-bold text-on-surface leading-tight">Account Settings</p>
+<p class="text-on-surface-variant text-sm">Personal info and credentials</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="group flex items-center justify-between p-5 bg-surface-container-lowest hover:bg-surface-container-low rounded-[20px] transition-all active:scale-[0.98]" href="#">
+<div class="flex items-center gap-5">
+<div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</div>
+<div>
+<p class="text-lg font-bold text-on-surface leading-tight">Notification Preferences</p>
+<p class="text-on-surface-variant text-sm">Real-time alerts &amp; emails</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="group flex items-center justify-between p-5 bg-surface-container-lowest hover:bg-surface-container-low rounded-[20px] transition-all active:scale-[0.98]" href="#">
+<div class="flex items-center gap-5">
+<div class="w-12 h-12 rounded-xl bg-tertiary-fixed-dim/30 flex items-center justify-center text-tertiary group-hover:bg-tertiary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+</div>
+<div>
+<p class="text-lg font-bold text-on-surface leading-tight">Support</p>
+<p class="text-on-surface-variant text-sm">Help center and legal</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</a>
+<button class="w-full mt-8 group flex items-center justify-between p-5 bg-error-container/20 hover:bg-error-container text-error rounded-[20px] transition-all active:scale-[0.98]">
+<div class="flex items-center gap-5">
+<div class="w-12 h-12 rounded-xl bg-error/10 flex items-center justify-center text-error group-hover:bg-error group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</div>
+<p class="text-lg font-bold leading-tight">Logout</p>
+</div>
+</button>
+</nav>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-white/85 backdrop-blur-md dark:bg-slate-900/85 z-50 border-t border-slate-100 dark:border-slate-800 shadow-[0_-8px_24px_rgba(0,0,0,0.06)]">
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-6 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="home_health">home_health</span>
+<span class="font-['Manrope'] body-lg font-semibold text-[16px]">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-6 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_ind">assignment_ind</span>
+<span class="font-['Manrope'] body-lg font-semibold text-[16px]">Referrals</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-[#003f98] dark:text-blue-300 rounded-2xl px-6 py-3 scale-98 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+<span class="font-['Manrope'] body-lg font-semibold text-[16px]">Profile</span>
+</a>
+</nav>
+</body></html>

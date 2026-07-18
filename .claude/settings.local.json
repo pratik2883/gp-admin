@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze *)",
+      "Bash(Get-Content *)",
+      "Bash(flutter build *)",
+      "Bash(Get-ChildItem -Path \"gp-app\" -Recurse -File -ErrorAction SilentlyContinue)",
+      "Bash(Measure-Object)",
+      "Bash(Select-Object -ExpandProperty Count)",
+      "Bash(powershell *)",
+      "Bash(flutter run *)",
+      "PowerShell(cd D:\\\\Web App Projects\\\\GP-Specialist\\\\gp-admin; php -r \"require 'vendor/autoload.php'; $app = require 'bootstrap/app.php'; $app->make\\('Illuminate\\\\Contracts\\\\Console\\\\Kernel'\\)->bootstrap\\(\\); echo 'Users columns: '; print_r\\(Schema::getColumnListing\\('users'\\)\\);\")",
+      "Bash(cd /d \"D:\\\\Web App Projects\\\\GP-Specialist\\\\gp-admin\")",
+      "Bash(php artisan *)"
+    ]
+  }
+}

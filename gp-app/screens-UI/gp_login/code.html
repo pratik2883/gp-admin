@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GP Login | Clinical Curator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#7a3000",
+              "secondary-fixed-dim": "#b5c6f5",
+              "on-secondary-fixed-variant": "#36466d",
+              "secondary": "#4e5d86",
+              "outline-variant": "#c3c6d5",
+              "error": "#ba1a1a",
+              "surface-dim": "#d9dadd",
+              "outline": "#737784",
+              "primary-fixed": "#d9e2ff",
+              "on-surface-variant": "#434653",
+              "on-primary-container": "#c5d4ff",
+              "primary-fixed-dim": "#b1c5ff",
+              "primary": "#003f98",
+              "on-background": "#191c1e",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#00419d",
+              "on-error-container": "#93000a",
+              "surface-container-lowest": "#ffffff",
+              "inverse-primary": "#b1c5ff",
+              "inverse-surface": "#2e3133",
+              "surface-bright": "#f8f9fc",
+              "on-secondary-fixed": "#061a3f",
+              "surface-container-highest": "#e1e2e5",
+              "surface-variant": "#e1e2e5",
+              "primary-container": "#1a56be",
+              "error-container": "#ffdad6",
+              "on-surface": "#191c1e",
+              "on-primary": "#ffffff",
+              "surface-container": "#edeef1",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed-dim": "#ffb693",
+              "on-secondary-container": "#475780",
+              "on-primary-fixed": "#001946",
+              "inverse-on-surface": "#f0f1f4",
+              "tertiary-container": "#9c3f00",
+              "secondary-fixed": "#d9e2ff",
+              "on-secondary": "#ffffff",
+              "secondary-container": "#becefd",
+              "surface-tint": "#1f59c1",
+              "tertiary": "#762e00",
+              "surface-container-low": "#f2f3f6",
+              "surface": "#f8f9fc",
+              "on-tertiary-container": "#ffc9b0",
+              "background": "#f8f9fc",
+              "on-tertiary-fixed": "#351000",
+              "surface-container-high": "#e7e8eb",
+              "tertiary-fixed": "#ffdbcc"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col items-center justify-center p-6">
+<!-- Brand Identity Logo / Title Section -->
+<div class="mb-12 text-center">
+<div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-primary-container rounded-2xl shadow-lg shadow-primary/20 mb-6">
+<span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<h1 class="font-headline text-4xl font-extrabold tracking-tight text-on-surface">GP Login</h1>
+<p class="text-on-surface-variant mt-2 font-medium">Access your clinical dashboard</p>
+</div>
+<!-- Login Container - Instagram-like Minimalism -->
+<div class="w-full max-w-[400px] space-y-4">
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+<form class="space-y-6">
+<!-- Email/Mobile Field -->
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-sm font-semibold text-on-surface-variant ml-1" for="username">
+<span class="material-symbols-outlined text-lg">person</span>
+                        Email or Mobile Number
+                    </label>
+<input class="w-full h-14 px-4 rounded-lg bg-surface-container-low border-none ring-0 focus:ring-2 focus:ring-surface-tint transition-all placeholder:text-outline text-on-surface font-medium" id="username" placeholder="doctor@clinic.com" type="text"/>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex items-center justify-between ml-1">
+<label class="flex items-center gap-2 text-sm font-semibold text-on-surface-variant" for="password">
+<span class="material-symbols-outlined text-lg">lock</span>
+                            Password
+                        </label>
+<a class="text-xs font-bold text-primary hover:underline" href="#">Forgot?</a>
+</div>
+<input class="w-full h-14 px-4 rounded-lg bg-surface-container-low border-none ring-0 focus:ring-2 focus:ring-surface-tint transition-all placeholder:text-outline text-on-surface font-medium" id="password" placeholder="••••••••" type="password"/>
+</div>
+<!-- Login Button -->
+<button class="w-full h-14 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-lg shadow-md shadow-primary/20 active:scale-95 transition-transform duration-200" type="submit">
+                    Log In
+                </button>
+<div class="relative py-2 flex items-center">
+<div class="flex-grow border-t border-outline-variant/30"></div>
+<span class="flex-shrink mx-4 text-xs font-bold text-outline uppercase tracking-widest">OR</span>
+<div class="flex-grow border-t border-outline-variant/30"></div>
+</div>
+<!-- Secondary Action -->
+<button class="w-full h-12 flex items-center justify-center gap-3 bg-surface-container-high text-on-secondary-container font-bold rounded-lg hover:bg-surface-container-highest transition-colors" type="button">
+<span class="material-symbols-outlined text-xl">fingerprint</span>
+                    Biometric Login
+                </button>
+</form>
+</div>
+<!-- Registration Link Container -->
+<div class="bg-surface-container-lowest rounded-xl p-6 text-center shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+<p class="text-on-surface-variant text-sm font-medium">
+                New to Clinical Curator? 
+                <a class="text-primary font-bold ml-1 hover:underline" href="#">Register as GP</a>
+</p>
+</div>
+</div>
+<!-- Editorial Footer Visual -->
+<div class="fixed bottom-0 left-0 w-full p-8 hidden md:flex justify-between items-end pointer-events-none opacity-20">
+<div class="max-w-xs">
+<h2 class="font-headline font-bold text-lg leading-tight">Delivering Editorial Excellence in Medical Referral Management.</h2>
+</div>
+<div class="flex gap-4">
+<div class="w-12 h-1 bg-primary rounded-full"></div>
+<div class="w-4 h-1 bg-outline-variant rounded-full"></div>
+<div class="w-4 h-1 bg-outline-variant rounded-full"></div>
+</div>
+</div>
+</body></html>
