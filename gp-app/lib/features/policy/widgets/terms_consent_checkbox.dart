@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
-import 'package:gp_app/app/providers.dart';
 import 'package:gp_app/ui/styles.dart';
 
 class TermsConsentCheckbox extends StatelessWidget {
@@ -37,7 +36,7 @@ class TermsConsentCheckbox extends StatelessWidget {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: AppStyles.bodyMedium?.copyWith(color: AppColors.textSecondary, height: 1.4),
+                style: AppStyles.bodyMedium.copyWith(color: AppColors.textSecondary, height: 1.4),
                 children: [
                   const TextSpan(text: 'I agree to the '),
                   TextSpan(

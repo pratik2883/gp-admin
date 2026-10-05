@@ -8,6 +8,7 @@ import 'package:gp_app/ui/widgets/app_hero_header.dart';
 import 'package:gp_app/ui/widgets/app_card.dart';
 import 'package:gp_app/ui/widgets/rounded_search_bar.dart';
 import 'package:gp_app/ui/widgets/states.dart';
+import 'package:gp_app/ui/widgets/specialist_profile_detail_modal.dart';
 
 class GpSpecialistListingPage extends ConsumerStatefulWidget {
   final int? specialtyId;
@@ -163,7 +164,7 @@ class _ListSpecialistCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Avatar(name: specialist.name, isPremium: specialist.isPremium),
+              _Avatar(name: specialist.name, isPremium: specialist.isPremium, photoUrl: specialist.profilePhoto),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -232,12 +233,54 @@ class _ListSpecialistCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  'Available for referrals nearby',
-                  style: AppStyles.caption.copyWith(color: AppColors.successGreen, fontWeight: FontWeight.w600),
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    SpecialistProfileDetailModal.show(
+                      context,
+                      specialist: {
+                        'id': specialist.id,
+                        'name': specialist.name,
+                        'speciality': specialist.speciality,
+                        'area_name': specialist.areaName,
+                        'hospital_name': specialist.hospitalName,
+                        'clinic_address': specialist.clinicAddress,
+                        'years_of_experience': specialist.yearsOfExperience,
+                        'is_premium': specialist.isPremium,
+                        'is_super_specialist': specialist.isSuperSpecialist,
+                        'clinic_timings': specialist.clinicTimings,
+                        'hospital_visiting_hours': specialist.hospitalVisitingHours,
+                        'profile_photo': specialist.profilePhoto,
+                        'show_mobile_number': specialist.showMobileNumber,
+                        'show_whatsapp_number': specialist.showWhatsappNumber,
+                        'mobile': specialist.mobile,
+                        'whatsapp_number': specialist.whatsappNumber,
+                        'languages': specialist.languages,
+                      },
+                      onReferPressed: onTap,
+                    );
+                  },
+                  icon: const Icon(Icons.person_pin_rounded, size: 16),
+                  label: const Text('View Profile'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryBlue,
+                    side: const BorderSide(color: AppColors.primaryBlue),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
                 ),
               ),
-              const Icon(Icons.arrow_forward_rounded, size: 18, color: AppColors.primaryBlue),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: onTap,
+                  icon: const Icon(Icons.send_rounded, size: 16),
+                  label: const Text('Refer Patient'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -249,11 +292,35 @@ class _ListSpecialistCard extends StatelessWidget {
 class _Avatar extends StatelessWidget {
   final String name;
   final bool isPremium;
+  final String? photoUrl;
 
-  const _Avatar({required this.name, this.isPremium = false});
+  const _Avatar({required this.name, this.isPremium = false, this.photoUrl});
 
   @override
   Widget build(BuildContext context) {
+    final photo = photoUrl?.trim();
+    if (photo != null && photo.isNotEmpty) {
+      return Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: isPremium ? Border.all(color: const Color(0xFFFFD700), width: 2) : null,
+          image: DecorationImage(
+            image: NetworkImage(photo),
+            fit: BoxFit.cover,
+          ),
+          boxShadow: isPremium ? [
+            BoxShadow(
+              color: Colors.amber.withAlpha(77),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ] : null,
+        ),
+      );
+    }
+
     final initials = name.isNotEmpty ? name.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase() : '?';
     
     return Container(

@@ -9,9 +9,12 @@ import 'package:gp_app/app/role.dart';
 import 'package:gp_app/ui/widgets/unread_badge_icon.dart';
 import 'package:gp_app/ui/widgets/app_hero_header.dart';
 import 'package:gp_app/ui/widgets/rounded_search_bar.dart';
+import 'package:gp_app/ui/widgets/global_search_modal.dart';
+import 'package:gp_app/ui/widgets/promoted_doctors_section.dart';
 import 'package:gp_app/ui/widgets/stat_summary_card.dart';
 import 'package:gp_app/ui/widgets/section_header_row.dart';
 import 'package:gp_app/features/specialist/presentation/widgets/lead_card.dart';
+import 'package:gp_app/features/specialist/state/lead_list_refreshable.dart';
 import 'package:flutter/services.dart';
 import 'package:gp_app/ui/widgets/role_bottom_nav.dart';
 
@@ -30,12 +33,18 @@ class _SpHomePageState extends ConsumerState<SpHomePage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(spLeadListControllerProvider.notifier).refresh(status: 'pending'));
+    Future.microtask(() => _notifier().refresh(status: 'pending'));
     _scroll.addListener(() {
       if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 100) {
-        ref.read(spLeadListControllerProvider.notifier).loadMore();
+        _notifier().loadMore();
       }
     });
+  }
+
+  LeadListRefreshable _notifier() {
+    return ref.read(selectedSubtypeProvider) == RoleSubtype.diagnostic
+        ? ref.read(dxReferralListControllerProvider.notifier)
+        : ref.read(spLeadListControllerProvider.notifier);
   }
 
   @override
@@ -53,9 +62,22 @@ class _SpHomePageState extends ConsumerState<SpHomePage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)));
     }
 
-    final state = ref.watch(spLeadListControllerProvider);
+    final state = ref.watch(selectedSubtypeProvider) == RoleSubtype.diagnostic
+        ? ref.watch(dxReferralListControllerProvider)
+        : ref.watch(spLeadListControllerProvider);
     final subtype = ref.watch(selectedSubtypeProvider);
-    final userName = auth.user.name.split(' ').first;
+    final isDx = subtype == RoleSubtype.diagnostic;
+    final isHospital = subtype == RoleSubtype.hospital;
+    final showPromoted = isHospital || isDx;
+
+    final rawName = auth.user.name.trim();
+    final String userName;
+    if (rawName.toLowerCase().startsWith('dr.') || rawName.toLowerCase().startsWith('dr ')) {
+      final parts = rawName.split(RegExp(r'\s+'));
+      userName = parts.length > 1 ? '${parts[0]} ${parts[1]}' : rawName;
+    } else {
+      userName = rawName.split(RegExp(r'\s+')).first;
+    }
 
     final dashTitle = switch (subtype) {
       RoleSubtype.hospital => 'Hospital Dashboard',
@@ -98,13 +120,13 @@ class _SpHomePageState extends ConsumerState<SpHomePage> {
               subtitle: 'Hello, $userName',
               trailing: const UnreadBadgeIcon(),
               bottom: RoundedSearchBar(
-                hintText: 'Search leads...',
-                onChanged: (v) => ref.read(spLeadListControllerProvider.notifier).refresh(q: v),
+                hintText: isDx ? 'Search hospitals & specialists...' : 'Search hospitals & centers...',
+                onTap: () => GlobalSearchModal.show(context),
               ),
             ),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () => ref.read(spLeadListControllerProvider.notifier).refresh(),
+                onRefresh: () => _notifier().refresh(),
                 color: AppColors.primaryBlue,
                 child: ListView(
                   controller: _scroll,
@@ -127,8 +149,14 @@ class _SpHomePageState extends ConsumerState<SpHomePage> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      if (showPromoted) ...[
+                        const PromotedDoctorsSection(),
+                        const SizedBox(height: 16),
+                      ],
                     ],
-                    SectionHeaderRow(title: widget.initialIndex == 0 ? 'Recent Lead Requests' : 'All Leads'),
+                    SectionHeaderRow(title: isDx
+                        ? (widget.initialIndex == 0 ? 'Recent Diagnostic Referrals' : 'All Diagnostic Referrals')
+                        : (widget.initialIndex == 0 ? 'Recent Lead Requests' : 'All Leads')),
                     const SizedBox(height: 12),
                     if (state.refreshing && state.items.isEmpty)
                       const Center(child: Padding(
@@ -136,15 +164,18 @@ class _SpHomePageState extends ConsumerState<SpHomePage> {
                         child: CircularProgressIndicator(color: AppColors.primaryBlue),
                       ))
                     else if (state.error != null && state.items.isEmpty)
-                      ErrorState(message: state.error!, onRetry: () => ref.read(spLeadListControllerProvider.notifier).refresh())
+                      ErrorState(
+                        message: state.error!,
+                        onRetry: () => _notifier().refresh(),
+                      )
                     else if (state.items.isEmpty)
-                      const EmptyState(message: 'No leads found for this filter.')
+                      EmptyState(message: isDx ? 'No diagnostic referrals found.' : 'No leads found for this filter.')
                     else
                       ...state.items.map((r) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: LeadCard(
                           lead: r,
-                          onTap: () => context.push('/sp/leads/${r.id}'),
+                          onTap: () => context.push(isDx ? '/sp/dx-referrals/${r.id}' : '/sp/leads/${r.id}'),
                         ),
                       )),
                     if (state.loading)
@@ -201,7 +232,7 @@ class _SpHomePageState extends ConsumerState<SpHomePage> {
         value: label == 'New' ? 'Pending' : label,
         icon: icon,
         accent: accent,
-        onTap: () => ref.read(spLeadListControllerProvider.notifier).refresh(status: statusKey),
+        onTap: () => _notifier().refresh(status: statusKey),
       ),
     );
   }

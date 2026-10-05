@@ -18,13 +18,20 @@ class MessageCentralAuthService
 
     public function getToken(): ?string
     {
+        $configuredToken = config('services.message_central.auth_token');
+        if (is_string($configuredToken) && $configuredToken !== '') {
+            return $configuredToken;
+        }
+
         $cached = Cache::get(self::TOKEN_CACHE_KEY);
         if (is_string($cached) && $cached !== '') {
             return $cached;
         }
 
-        $customerId = $this->settings->message_central_customer_id;
-        $password = $this->settings->message_central_password;
+        $customerId = $this->settings->message_central_customer_id
+            ?: config('services.message_central.customer_id');
+        $password = $this->settings->message_central_password
+            ?: config('services.message_central.password');
 
         if (! $customerId || ! $password) {
             return null;
@@ -32,12 +39,13 @@ class MessageCentralAuthService
 
         $key = base64_encode($password);
 
-        $response = Http::get(self::BASE_URL . '/auth/v1/authentication/token', [
+        $response = Http::get($this->baseUrl().'/auth/v1/authentication/token', [
             'customerId' => $customerId,
             'key' => $key,
             'scope' => 'NEW',
-            'country' => '91',
-            'email' => $this->settings->message_central_email ?? '',
+            'country' => config('services.message_central.country', '91'),
+            'email' => $this->settings->message_central_email
+                ?: config('services.message_central.email', ''),
         ]);
 
         if (! $response->successful()) {
@@ -62,6 +70,6 @@ class MessageCentralAuthService
 
     public function baseUrl(): string
     {
-        return self::BASE_URL;
+        return (string) config('services.message_central.base_url', self::BASE_URL);
     }
 }

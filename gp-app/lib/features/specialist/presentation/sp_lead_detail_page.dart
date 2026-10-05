@@ -172,7 +172,7 @@ class _SpLeadDetailPageState extends ConsumerState<SpLeadDetailPage> {
   Widget _buildActionButtons(l) {
     final status = (l.status ?? 'pending').toLowerCase();
 
-    if (status == 'pending' || status == 'new') {
+    if (status == 'pending' || status == 'new' || status == 'sent') {
       return Row(
         children: [
           Expanded(

@@ -12,6 +12,7 @@ class User with _$User {
     required String mobile,
     required String role,
     int? gp_id,
+    @JsonKey(name: 'gp_status') String? gpStatus,
     int? specialist_id,
     @JsonKey(name: 'registration_number') String? registrationNumber,
     String? speciality,

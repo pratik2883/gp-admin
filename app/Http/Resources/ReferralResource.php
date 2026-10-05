@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\MissingValue;
 use Illuminate\Support\Facades\Storage;
 
 class ReferralResource extends JsonResource
@@ -13,11 +14,14 @@ class ReferralResource extends JsonResource
         $hospital = $this->whenLoaded('hospital');
 
         $specialistDetails = null;
-        if ($specialist) {
+        if ($specialist && ! $specialist instanceof MissingValue) {
             $primaryHospital = $specialist->hospitals->first();
             $specialistDetails = [
                 'id' => $specialist->id,
                 'name' => $specialist->user?->name,
+                'profile_photo' => $specialist->profile_photo_path
+                    ? (is_file(public_path($specialist->profile_photo_path)) ? url($specialist->profile_photo_path) : Storage::disk('public')->url($specialist->profile_photo_path))
+                    : null,
                 'speciality' => $specialist->specialty?->plain_label
                     ?? $specialist->specialty?->name
                     ?? $specialist->primary_specialization,
@@ -33,7 +37,7 @@ class ReferralResource extends JsonResource
         }
 
         $hospitalDetails = null;
-        if ($hospital) {
+        if ($hospital && ! $hospital instanceof MissingValue) {
             $hospitalDetails = [
                 'id' => $hospital->id,
                 'name' => $hospital->name,
@@ -62,12 +66,22 @@ class ReferralResource extends JsonResource
                 'id' => $this->gp?->id,
                 'name' => $this->gp?->user?->name,
             ]),
+            'gp_name' => $this->whenLoaded('gp', fn () => $this->gp?->user?->name),
+            'notes' => $this->case_summary,
+            'hospital_name' => $hospitalDetails['name'] ?? $this->hospital?->name,
             'files' => $this->whenLoaded('files', fn () => $this->files->map(function ($f) {
                 return [
                     'id' => $f->id,
                     'name' => $f->original_name,
                     'mime_type' => $f->mime_type,
                     'size' => $f->size,
+                    'url' => $f->file_path ? Storage::disk('public')->url($f->file_path) : null,
+                ];
+            })->values()),
+            'attachments' => $this->whenLoaded('files', fn () => $this->files->map(function ($f) {
+                return [
+                    'id' => $f->id,
+                    'name' => $f->original_name,
                     'url' => $f->file_path ? Storage::disk('public')->url($f->file_path) : null,
                 ];
             })->values()),

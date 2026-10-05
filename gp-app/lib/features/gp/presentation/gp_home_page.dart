@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gp_app/app/providers.dart';
 import 'package:gp_app/core/storage/secure_storage.dart';
 import 'package:gp_app/features/auth/state/auth_state.dart';
+import 'package:gp_app/features/gp/state/gp_home_state.dart';
 import 'package:gp_app/ui/styles.dart';
 import 'package:gp_app/ui/widgets/states.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +17,10 @@ import 'package:gp_app/ui/widgets/referral_patient_card.dart';
 import 'package:gp_app/ui/widgets/gp_bottom_nav.dart';
 import 'package:gp_app/ui/widgets/home_skeletons.dart';
 import 'package:gp_app/ui/widgets/app_card.dart';
+import 'package:gp_app/ui/widgets/primary_button.dart';
 import 'package:gp_app/ui/widgets/rounded_search_bar.dart';
+import 'package:gp_app/ui/widgets/global_search_modal.dart';
+import 'package:gp_app/ui/widgets/promoted_doctors_section.dart';
 
 class GpHomePage extends ConsumerStatefulWidget {
   const GpHomePage({super.key});
@@ -92,6 +96,10 @@ class _GpHomePageState extends ConsumerState<GpHomePage> {
     final greeting = _greeting();
     final userName = auth.user.name.trim().isEmpty ? 'Doctor' : auth.user.name.trim();
 
+    final gpStatus = auth.user.gpStatus;
+    final knownLocked = gpStatus == 'pending' || gpStatus == 'blocked';
+    final showLock = knownLocked || dash is GpHomeNotApproved;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -117,36 +125,37 @@ class _GpHomePageState extends ConsumerState<GpHomePage> {
         duration: const Duration(milliseconds: 220),
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
-        child: dash.when(
-          loading: () => const KeyedSubtree(key: ValueKey('home_loading'), child: GpHomeSkeleton()),
-          error: (m) => KeyedSubtree(
-            key: const ValueKey('home_error'),
-            child: Padding(
-              padding: AppSpacing.screenPadding.copyWith(top: 18, bottom: 28),
-              child: AppCard(
-                child: ErrorState(
-                  title: 'We couldn’t load your dashboard.',
-                  subtitle: 'Check your connection and try again.',
-                  message: m,
-                  onRetry: () => ref.read(gpHomeControllerProvider.notifier).load(),
+        child: showLock
+            ? KeyedSubtree(
+                key: const ValueKey('home_not_approved'),
+                child: _PendingApprovalView(
+                  blocked: gpStatus == 'blocked',
+                  message: dash is GpHomeError
+                      ? dash.message
+                      : dash is GpHomeNotApproved
+                          ? dash.message
+                          : null,
+                  onCheckStatus: () => ref.read(gpHomeControllerProvider.notifier).load(),
                 ),
-              ),
-            ),
-          ),
-          notApproved: (m) => KeyedSubtree(
-            key: const ValueKey('home_not_approved'),
-            child: Padding(
-              padding: AppSpacing.screenPadding.copyWith(top: 18, bottom: 28),
-              child: AppCard(
-                child: ErrorState(
-                  title: 'Account Pending Approval',
-                  subtitle: 'Your GP profile is waiting for admin verification. This usually takes 1–2 business days.',
-                  message: m,
+              )
+            : dash.when(
+                loading: () => const KeyedSubtree(key: ValueKey('home_loading'), child: GpHomeSkeleton()),
+                error: (m) => KeyedSubtree(
+                  key: const ValueKey('home_error'),
+                  child: Padding(
+                    padding: AppSpacing.screenPadding.copyWith(top: 18, bottom: 28),
+                    child: AppCard(
+                      child: ErrorState(
+                        title: 'We couldn’t load your dashboard.',
+                        subtitle: 'Check your connection and try again.',
+                        message: m,
+                        onRetry: () => ref.read(gpHomeControllerProvider.notifier).load(),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
-          loaded: (d) => KeyedSubtree(
+                notApproved: (m) => const SizedBox.shrink(),
+                loaded: (d) => KeyedSubtree(
             key: const ValueKey('home_loaded'),
             child: Column(
               children: [
@@ -184,8 +193,8 @@ class _GpHomePageState extends ConsumerState<GpHomePage> {
                     ],
                   ),
                   bottom: RoundedSearchBar(
-                    hintText: 'Search',
-                    onTap: () => context.go('/gp/referrals'),
+                    hintText: 'Search specialists, hospitals, centers...',
+                    onTap: () => GlobalSearchModal.show(context),
                   ),
                 ),
                 Expanded(
@@ -197,6 +206,8 @@ class _GpHomePageState extends ConsumerState<GpHomePage> {
                       _buildStatsRow(context, d),
                       const SizedBox(height: 22),
                       _buildNearbyReferralSection(context, ref),
+                      const SizedBox(height: 18),
+                      const PromotedDoctorsSection(),
                       const SizedBox(height: 18),
                       _buildBrowseByLocationSection(context),
                       const SizedBox(height: 22),
@@ -229,7 +240,7 @@ class _GpHomePageState extends ConsumerState<GpHomePage> {
           ),
         ),
       ),
-      bottomNavigationBar: const GpBottomNav(currentIndex: 0),
+      bottomNavigationBar: GpBottomNav(currentIndex: 0, approved: !showLock),
     ),
   );
 }
@@ -310,10 +321,90 @@ class _GpHomePageState extends ConsumerState<GpHomePage> {
   }
 }
 
+class _PendingApprovalView extends StatelessWidget {
+  final bool blocked;
+  final String? message;
+  final VoidCallback onCheckStatus;
+
+  const _PendingApprovalView({
+    required this.blocked,
+    this.message,
+    required this.onCheckStatus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = blocked ? AppColors.errorRed : AppColors.warningYellow;
+    return Padding(
+      padding: AppSpacing.screenPadding.copyWith(top: 24, bottom: 28),
+      child: AppCard(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: color.withAlpha(20),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  blocked ? Icons.block_rounded : Icons.hourglass_top_rounded,
+                  color: color,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                blocked ? 'Account Blocked' : 'Account Pending Approval',
+                style: AppStyles.heading2,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                blocked
+                    ? 'Your account has been blocked by the administrator. If you think this is a mistake, please contact support.'
+                    : 'Your GP profile is waiting for admin verification. This usually takes 1–2 business days. You can complete your profile details in the meantime.',
+                style: AppStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+              if (message != null && message!.trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  message!.trim(),
+                  style: AppStyles.caption.copyWith(color: AppColors.textMuted),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              const SizedBox(height: 20),
+              PrimaryButton(
+                label: 'Check Status',
+                onPressed: onCheckStatus,
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => context.push('/support'),
+                child: Text(
+                  'Contact Support',
+                  style: AppStyles.buttonText.copyWith(color: AppColors.secondaryTeal),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 Widget _buildNearbyReferralSection(BuildContext context, WidgetRef ref) {
   final locationsAsync = ref.watch(nearbyReferralLocationsProvider);
   final selectedLocationId = ref.watch(nearbyReferralLocationIdProvider);
   final gpsAsync = ref.watch(currentLocationProvider);
+  final gps = gpsAsync.asData?.value;
+  final hasGpsFix = gps != null && gps.city != null && gps.error == null;
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,7 +458,7 @@ Widget _buildNearbyReferralSection(BuildContext context, WidgetRef ref) {
                               padding: EdgeInsets.all(10),
                               child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
                             )
-                          : gpsAsync.asData?.value?.city != null && gpsAsync.asData?.value?.error == null
+                          : hasGpsFix
                               ? const Icon(Icons.my_location_rounded, color: AppColors.primaryBlue, size: 22)
                               : const Icon(Icons.place_rounded, color: AppColors.primaryBlue, size: 22),
                     ),
@@ -388,7 +479,7 @@ Widget _buildNearbyReferralSection(BuildContext context, WidgetRef ref) {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (gpsAsync.asData?.value?.city != null && gpsAsync.asData?.value?.error == null)
+                              if (hasGpsFix)
                                 Padding(
                                   padding: const EdgeInsets.only(left: 6),
                                   child: Container(
@@ -565,23 +656,23 @@ class _NearbyReferralSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        AppCard(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        const AppCard(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
-              const CircleAvatar(radius: 20, backgroundColor: AppColors.inputBackground),
-              const SizedBox(width: 12),
+              CircleAvatar(radius: 20, backgroundColor: AppColors.inputBackground),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     AppSkeletonBox(width: 56, height: 10, borderRadius: BorderRadius.all(Radius.circular(999))),
                     SizedBox(height: 8),
                     AppSkeletonBox(width: 140, height: 12, borderRadius: BorderRadius.all(Radius.circular(999))),
                   ],
                 ),
               ),
-              const AppSkeletonBox(width: 44, height: 10, borderRadius: BorderRadius.all(Radius.circular(999))),
+              AppSkeletonBox(width: 44, height: 10, borderRadius: BorderRadius.all(Radius.circular(999))),
             ],
           ),
         ),
@@ -596,9 +687,9 @@ class _NearbyReferralSkeleton extends StatelessWidget {
             childAspectRatio: 1.0,
           ),
           itemCount: 6,
-          itemBuilder: (_, __) => AppCard(
-            padding: const EdgeInsets.all(12),
-            child: const Column(
+          itemBuilder: (_, __) => const AppCard(
+            padding: EdgeInsets.all(12),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircleAvatar(radius: 16, backgroundColor: AppColors.inputBackground),
@@ -699,9 +790,9 @@ class _NearbyCategoriesSkeleton extends StatelessWidget {
         childAspectRatio: 1.0,
       ),
       itemCount: 6,
-      itemBuilder: (_, __) => AppCard(
-        padding: const EdgeInsets.all(12),
-        child: const Column(
+      itemBuilder: (_, __) => const AppCard(
+        padding: EdgeInsets.all(12),
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircleAvatar(radius: 16, backgroundColor: AppColors.inputBackground),

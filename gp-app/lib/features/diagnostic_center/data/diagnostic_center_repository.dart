@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:gp_app/core/http/dio_client.dart';
+import 'package:gp_app/features/specialist/models/lead_list_response.dart';
 
 class DiagnosticCenterRepository {
   final Dio _dio;
@@ -56,5 +57,33 @@ class DiagnosticCenterRepository {
 
   Future<void> updateProfile(Map<String, dynamic> payload) async {
     await _dio.patch('/api/diagnostic/profile', data: payload);
+  }
+
+  Future<LeadListResponse> fetchReferrals({String? status, String? q, int page = 1, int perPage = 20}) async {
+    final res = await _dio.get('/api/diagnostic/referrals', queryParameters: {
+      if (status != null && status.isNotEmpty) 'status': status,
+      if (q != null && q.isNotEmpty) 'q': q,
+      'page': page,
+      'per_page': perPage,
+    });
+    return LeadListResponse.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> fetchReferral(String id) async {
+    final res = await _dio.get('/api/diagnostic/referrals/$id');
+    var data = res.data as Map<String, dynamic>;
+    if (data.containsKey('data') && data['data'] is Map<String, dynamic>) {
+      data = data['data'] as Map<String, dynamic>;
+    }
+    return data;
+  }
+
+  Future<Map<String, dynamic>> updateReferralStatus(String id, String status) async {
+    final res = await _dio.patch('/api/diagnostic/referrals/$id/status', data: {'status': status});
+    var data = res.data as Map<String, dynamic>;
+    if (data.containsKey('data') && data['data'] is Map<String, dynamic>) {
+      data = data['data'] as Map<String, dynamic>;
+    }
+    return data;
   }
 }

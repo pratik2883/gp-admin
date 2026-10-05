@@ -12,6 +12,7 @@ use App\Models\Location;
 use App\Models\Referral;
 use App\Models\Specialist;
 use App\Models\Specialty;
+use App\Notifications\DiagnosticReferralCreatedNotification;
 use App\Notifications\ReferralCreatedNotification;
 use App\Settings\GeneralSettings;
 use App\Settings\WorkflowSettings;
@@ -221,6 +222,9 @@ class GpReferralController extends Controller
             return [
                 'id' => $specialist->id,
                 'name' => $specialist->user?->name,
+                'profile_photo' => $specialist->profile_photo_path
+                    ? (is_file(public_path($specialist->profile_photo_path)) ? url($specialist->profile_photo_path) : Storage::disk('public')->url($specialist->profile_photo_path))
+                    : null,
                 'speciality' => $specialtyLabel,
                 'area_name' => $specialist->location?->name,
                 'hospital_name' => $specialist->hospital_name ?: $primaryHospital?->name,
@@ -526,7 +530,7 @@ class GpReferralController extends Controller
                 'patient_age' => 'nullable|integer|min:0|max:120',
                 'patient_gender' => ['nullable', Rule::in(['male', 'female', 'other'])],
                 'case_summary' => 'required|string',
-                'appointment_type' => ['required', Rule::in(['opd', 'ipd'])],
+                'appointment_type' => ['nullable', Rule::in(['opd', 'ipd'])],
                 'reports' => 'nullable|array',
                 'reports.*' => 'file|mimes:'.$mimes.'|max:'.$maxKb,
                 'attachments' => 'nullable|array',
@@ -573,7 +577,7 @@ class GpReferralController extends Controller
                 'patient_age' => $data['patient_age'] ?? null,
                 'patient_gender' => $data['patient_gender'] ?? null,
                 'case_summary' => $data['case_summary'],
-                'appointment_type' => $data['appointment_type'],
+                'appointment_type' => $data['appointment_type'] ?? 'opd',
                 'priority' => $data['priority'] ?? 'routine',
                 'status' => 'sent',
             ]);
@@ -595,6 +599,11 @@ class GpReferralController extends Controller
             }
 
             $diagnosticReferral->load(['center', 'services', 'files']);
+
+            $centerUser = $diagnosticReferral->center?->user;
+            if ($centerUser) {
+                $centerUser->notify(new DiagnosticReferralCreatedNotification($diagnosticReferral));
+            }
 
             return response()->json([
                 'data' => [

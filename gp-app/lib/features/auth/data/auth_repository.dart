@@ -19,15 +19,52 @@ class AuthRepository {
     return data;
   }
 
-  Future<LoginResponse> loginWithOtp({required String firebaseIdToken, required String roleHint, bool termsAccepted = false}) async {
+  Future<LoginResponse> loginWithOtp({
+    required String mobile,
+    required String verificationId,
+    required String otpCode,
+    required String roleHint,
+    bool termsAccepted = false,
+  }) async {
     final res = await _client.dio.post('/api/auth/login-with-otp', data: {
-      'firebase_id_token': firebaseIdToken,
+      'mobile': mobile,
+      'verification_id': verificationId,
+      'otp_code': otpCode,
       'role_hint': roleHint,
       'terms_accepted': termsAccepted,
     });
     final data = LoginResponse.fromJson(res.data as Map<String, dynamic>);
     await _storage.saveToken(data.token);
     return data;
+  }
+
+  Future<String> sendLoginOtp({required String mobile}) async {
+    final res = await _client.dio.post('/api/auth/send-otp', data: {
+      'mobile': mobile,
+    });
+    final data = res.data;
+    if (data is Map<String, dynamic>) {
+      final verificationId = data['verification_id'];
+      if (verificationId is String && verificationId.isNotEmpty) {
+        return verificationId;
+      }
+      final otpDebug = data['otp_debug'];
+      if (otpDebug != null) {
+        return otpDebug.toString();
+      }
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        error: (data['message'] ?? 'Failed to send OTP').toString(),
+        type: DioExceptionType.badResponse,
+      );
+    }
+    throw DioException(
+      requestOptions: res.requestOptions,
+      response: res,
+      error: 'Failed to send OTP',
+      type: DioExceptionType.badResponse,
+    );
   }
 
   Future<User> register({

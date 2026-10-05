@@ -103,7 +103,7 @@ with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED, compressle
     zf.writestr("index.php", index_php)
 
     # Root-level public assets
-    for item in ["build", "css", "js", "fonts"]:
+    for item in ["build", "css", "js", "fonts", "landing-assets", "vendor"]:
         src = public_root / item
         if src.is_dir():
             print(f"Adding {item}/ ...")
@@ -113,8 +113,8 @@ with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED, compressle
         if src.is_file():
             zf.write(str(src), arcname=item)
 
-    # Core single files
-    for item in ["artisan", "composer.json", "composer.lock", ".env", ".env.example"]:
+    # Core single files (NOTE: .env intentionally excluded — server keeps its own)
+    for item in ["artisan", "composer.json", "composer.lock", ".env.example"]:
         src = project_root / item
         if src.is_file():
             zf.write(str(src), arcname=f"core/{src.name}")

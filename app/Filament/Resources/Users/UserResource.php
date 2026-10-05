@@ -17,10 +17,10 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
@@ -32,6 +32,11 @@ class UserResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'User Management';
 
     protected static ?int $navigationSort = 1;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with(['gp']);
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -86,6 +91,16 @@ class UserResource extends Resource
                     ->badge(),
                 TextEntry::make('status')
                     ->badge(),
+                TextEntry::make('gp.status')
+                    ->label('GP approval')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'approved' => 'success',
+                        'blocked' => 'danger',
+                        'pending' => 'warning',
+                        default => 'gray',
+                    })
+                    ->placeholder('—'),
                 TextEntry::make('email_verified_at')
                     ->dateTime()
                     ->placeholder('-'),
@@ -113,6 +128,17 @@ class UserResource extends Resource
                     ->badge(),
                 TextColumn::make('status')
                     ->badge(),
+                TextColumn::make('gp.status')
+                    ->label('GP approval')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'approved' => 'success',
+                        'blocked' => 'danger',
+                        'pending' => 'warning',
+                        default => 'gray',
+                    })
+                    ->placeholder('—')
+                    ->toggleable(),
                 IconColumn::make('is_super_admin')
                     ->label('Super')
                     ->boolean()

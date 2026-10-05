@@ -125,7 +125,7 @@
             </p>
             <div class="mt-8 flex flex-col items-center gap-3 lg:items-start">
               <div class="flex flex-wrap items-center gap-3 ">
-                <a href="#" class="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-brand px-7 py-4 font-semibold text-[oklch(0.12_0.03_240)] shadow-[0_10px_40px_-10px_oklch(0.78_0.16_195/0.6)] transition-transform hover:-translate-y-0.5">                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="currentColor" aria-hidden="true">
+                <a href="https://play.google.com/store/apps/details?id=gp.specialit.com" target="_blank" rel="noopener noreferrer" class="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-brand px-7 py-4 font-semibold text-[oklch(0.12_0.03_240)] shadow-[0_10px_40px_-10px_oklch(0.78_0.16_195/0.6)] transition-transform hover:-translate-y-0.5">                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="currentColor" aria-hidden="true">
                   <path d="M3.6 1.7c-.4.3-.6.8-.6 1.5v17.6c0 .7.2 1.2.6 1.5l.1.1L13.5 12v-.1L3.7 1.7h-.1z" opacity=".9">
                   </path>
                   <path d="M16.8 15.3 13.5 12v-.1l3.3-3.3.1.1 3.9 2.2c1.1.6 1.1 1.6 0 2.2l-4 2.2z">
@@ -1021,7 +1021,7 @@
             </p>
             <div class="mt-9 flex justify-center">
               <div class="flex flex-wrap items-center gap-3 ">
-                <a href="#" class="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-brand px-7 py-4 font-semibold text-[oklch(0.12_0.03_240)] shadow-[0_10px_40px_-10px_oklch(0.78_0.16_195/0.6)] transition-transform hover:-translate-y-0.5">                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="currentColor" aria-hidden="true">
+                <a href="https://play.google.com/store/apps/details?id=gp.specialit.com" target="_blank" rel="noopener noreferrer" class="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-brand px-7 py-4 font-semibold text-[oklch(0.12_0.03_240)] shadow-[0_10px_40px_-10px_oklch(0.78_0.16_195/0.6)] transition-transform hover:-translate-y-0.5">                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="currentColor" aria-hidden="true">
                   <path d="M3.6 1.7c-.4.3-.6.8-.6 1.5v17.6c0 .7.2 1.2.6 1.5l.1.1L13.5 12v-.1L3.7 1.7h-.1z" opacity=".9">
                   </path>
                   <path d="M16.8 15.3 13.5 12v-.1l3.3-3.3.1.1 3.9 2.2c1.1.6 1.1 1.6 0 2.2l-4 2.2z">

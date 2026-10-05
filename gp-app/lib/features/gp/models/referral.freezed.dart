@@ -43,6 +43,7 @@ mixin _$Referral {
   String? get priority => throw _privateConstructorUsedError;
   String? get patient_name => throw _privateConstructorUsedError;
   String? get patient_mobile => throw _privateConstructorUsedError;
+  @JsonKey(readValue: _readPatientAge)
   int? get patient_age => throw _privateConstructorUsedError;
   String? get patient_gender => throw _privateConstructorUsedError;
   @JsonKey(name: 'case_summary')
@@ -106,7 +107,7 @@ abstract class $ReferralCopyWith<$Res> {
       String? priority,
       String? patient_name,
       String? patient_mobile,
-      int? patient_age,
+      @JsonKey(readValue: _readPatientAge) int? patient_age,
       String? patient_gender,
       @JsonKey(name: 'case_summary') String? notes,
       DateTime? created_at,
@@ -326,7 +327,7 @@ abstract class _$$ReferralImplCopyWith<$Res>
       String? priority,
       String? patient_name,
       String? patient_mobile,
-      int? patient_age,
+      @JsonKey(readValue: _readPatientAge) int? patient_age,
       String? patient_gender,
       @JsonKey(name: 'case_summary') String? notes,
       DateTime? created_at,
@@ -539,7 +540,7 @@ class _$ReferralImpl implements _Referral {
       this.priority,
       this.patient_name,
       this.patient_mobile,
-      this.patient_age,
+      @JsonKey(readValue: _readPatientAge) this.patient_age,
       this.patient_gender,
       @JsonKey(name: 'case_summary') this.notes,
       this.created_at,
@@ -602,6 +603,7 @@ class _$ReferralImpl implements _Referral {
   @override
   final String? patient_mobile;
   @override
+  @JsonKey(readValue: _readPatientAge)
   final int? patient_age;
   @override
   final String? patient_gender;
@@ -814,7 +816,7 @@ abstract class _Referral implements Referral {
       final String? priority,
       final String? patient_name,
       final String? patient_mobile,
-      final int? patient_age,
+      @JsonKey(readValue: _readPatientAge) final int? patient_age,
       final String? patient_gender,
       @JsonKey(name: 'case_summary') final String? notes,
       final DateTime? created_at,
@@ -877,6 +879,7 @@ abstract class _Referral implements Referral {
   @override
   String? get patient_mobile;
   @override
+  @JsonKey(readValue: _readPatientAge)
   int? get patient_age;
   @override
   String? get patient_gender;

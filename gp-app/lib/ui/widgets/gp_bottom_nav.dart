@@ -4,10 +4,12 @@ import 'package:gp_app/ui/styles.dart';
 
 class GpBottomNav extends StatelessWidget {
   final int currentIndex;
+  final bool approved;
 
   const GpBottomNav({
     super.key,
     required this.currentIndex,
+    this.approved = true,
   });
 
   @override
@@ -32,21 +34,23 @@ class GpBottomNav extends StatelessWidget {
               selected: currentIndex == 0,
               onTap: () => _go(context, 0),
             ),
-            _NavItem(
-              label: 'Referrals',
-              icon: Icons.assignment_rounded,
-              selected: currentIndex == 1,
-              onTap: () => _go(context, 1),
-            ),
-            _CenterAction(
-              onTap: () => context.push('/gp/referrals/new'),
-            ),
-            _NavItem(
-              label: 'Diagnostics',
-              icon: Icons.biotech_rounded,
-              selected: currentIndex == 2,
-              onTap: () => _go(context, 2),
-            ),
+            if (approved) ...[
+              _NavItem(
+                label: 'Referrals',
+                icon: Icons.assignment_rounded,
+                selected: currentIndex == 1,
+                onTap: () => _go(context, 1),
+              ),
+              _CenterAction(
+                onTap: () => context.push('/gp/referrals/new'),
+              ),
+              _NavItem(
+                label: 'Diagnostics',
+                icon: Icons.biotech_rounded,
+                selected: currentIndex == 2,
+                onTap: () => _go(context, 2),
+              ),
+            ],
             _NavItem(
               label: 'Profile',
               icon: Icons.account_circle_rounded,

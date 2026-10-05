@@ -76,7 +76,7 @@ class _SupportTicketCreatePageState extends ConsumerState<SupportTicketCreatePag
             category: _category,
             priority: _priority,
             message: _message.text.trim(),
-            filePaths: _attachments.map((e) => e.path!).toList(),
+            attachments: _attachments,
           );
 
       if (!mounted) return;

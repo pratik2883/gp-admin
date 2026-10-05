@@ -19,6 +19,6 @@ class AppNotification with _$AppNotification {
 
   String get title => data['title'] as String? ?? 'Notification';
   String get body => data['body'] as String? ?? '';
-  String? get targetId => data['target_id']?.toString() ?? data['id']?.toString();
+  String? get targetId => data['target_id']?.toString() ?? data['referral_id']?.toString() ?? data['id']?.toString();
   bool get isRead => read_at != null;
 }

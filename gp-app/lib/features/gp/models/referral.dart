@@ -24,7 +24,7 @@ class Referral with _$Referral {
     String? priority,
     String? patient_name,
     String? patient_mobile,
-    int? patient_age,
+    @JsonKey(readValue: _readPatientAge) int? patient_age,
     String? patient_gender,
     @JsonKey(name: 'case_summary') String? notes,
     DateTime? created_at,
@@ -46,6 +46,16 @@ class Referral with _$Referral {
   }) = _Referral;
 
   factory Referral.fromJson(Map<String, dynamic> json) => _$ReferralFromJson(json);
+}
+
+Object? _readPatientAge(Map<dynamic, dynamic> json, String key) {
+  final direct = json[key];
+  if (direct is num) return direct.toInt();
+  if (direct is String) {
+    final parsed = int.tryParse(direct.trim());
+    if (parsed != null) return parsed;
+  }
+  return null;
 }
 
 Object? _readSpecialistName(Map<dynamic, dynamic> json, String key) {

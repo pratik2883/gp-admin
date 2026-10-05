@@ -17,6 +17,7 @@ import 'package:gp_app/ui/widgets/app_card.dart';
 import 'package:gp_app/ui/widgets/section_header_row.dart';
 import 'package:gp_app/ui/widgets/app_segmented_control.dart';
 import 'package:gp_app/ui/widgets/app_attachment_list.dart';
+import 'package:gp_app/ui/widgets/specialist_profile_detail_modal.dart';
 
 enum ReferralType { specialist, diagnostic, hospital }
 
@@ -1362,6 +1363,14 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                                       ),
                                       child: Row(
                                         children: [
+                                          if (sp['profile_photo'] != null || sp['photo_url'] != null) ...[
+                                            CircleAvatar(
+                                              radius: 12,
+                                              backgroundColor: AppColors.primaryBlue.withAlpha(30),
+                                              backgroundImage: NetworkImage(((sp['profile_photo'] ?? sp['photo_url']) as String).trim()),
+                                            ),
+                                            const SizedBox(width: 8),
+                                          ],
                                           Expanded(
                                             child: Text(
                                               hospital.isNotEmpty
@@ -1373,6 +1382,20 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                                                   .copyWith(
                                                       color: AppColors
                                                           .textSecondary),
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTap: () => SpecialistProfileDetailModal.show(context, specialist: sp),
+                                            child: const Padding(
+                                              padding: EdgeInsets.symmetric(horizontal: 4),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.person_pin_rounded, size: 16, color: AppColors.primaryBlue),
+                                                  SizedBox(width: 2),
+                                                  Text('Profile', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                           if (isPremium)
@@ -2471,6 +2494,10 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                         if (id.isEmpty || name.isEmpty)
                           return const SizedBox.shrink();
                         final selected = id == selectedId;
+                        final photo = (e['profile_photo'] as String?) ?? (e['photo_url'] as String?) ?? (e['photo'] as String?);
+                        final hasPhoto = photo != null && photo.trim().isNotEmpty;
+                        final isSpecialistItem = title.contains('Specialist') || (e['speciality'] != null && e['speciality'].toString().isNotEmpty);
+
                         return AppCard(
                           onTap: () => Navigator.pop(context, id),
                           padding: const EdgeInsets.symmetric(
@@ -2488,29 +2515,32 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                           ],
                           child: Row(
                             children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  gradient:
-                                      selected ? AppColors.heroGradient : null,
-                                  color: selected
-                                      ? null
-                                      : AppColors.inputBackground,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  (leadingIconBuilder != null
-                                          ? leadingIconBuilder(e)
-                                          : null) ??
-                                      leadingIcon ??
-                                      Icons.location_on_rounded,
-                                  color: selected
-                                      ? Colors.white
-                                      : AppColors.primaryBlue,
-                                  size: 18,
-                                ),
-                              ),
+                              hasPhoto
+                                  ? CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: AppColors.primaryBlue.withAlpha(30),
+                                      backgroundImage: NetworkImage(photo!.trim()),
+                                    )
+                                  : Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        gradient: selected ? AppColors.heroGradient : null,
+                                        color: selected ? null : AppColors.inputBackground,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        (leadingIconBuilder != null
+                                                ? leadingIconBuilder(e)
+                                                : null) ??
+                                            leadingIcon ??
+                                            Icons.location_on_rounded,
+                                        color: selected
+                                            ? Colors.white
+                                            : AppColors.primaryBlue,
+                                        size: 20,
+                                      ),
+                                    ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -2540,7 +2570,20 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              if (isSpecialistItem) ...[
+                                IconButton(
+                                  icon: const Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue, size: 22),
+                                  tooltip: 'View Profile Details',
+                                  onPressed: () {
+                                    SpecialistProfileDetailModal.show(
+                                      context,
+                                      specialist: e,
+                                      onReferPressed: () => Navigator.pop(context, id),
+                                    );
+                                  },
+                                ),
+                              ],
+                              const SizedBox(width: 4),
                               Icon(
                                 selected
                                     ? Icons.check_circle_rounded

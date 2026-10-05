@@ -35,7 +35,11 @@ class SupportTicket {
     this.messages = const [],
   });
 
-  factory SupportTicket.fromJson(Map<String, dynamic> json) {
+  factory SupportTicket.fromJson(Map<String, dynamic> rawJson) {
+    final json = (rawJson['data'] is Map<String, dynamic>)
+        ? rawJson['data'] as Map<String, dynamic>
+        : rawJson;
+
     final assignedAdmin = json['assigned_admin'] is Map<String, dynamic>
         ? json['assigned_admin'] as Map<String, dynamic>
         : null;

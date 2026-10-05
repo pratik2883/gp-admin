@@ -56,7 +56,7 @@ class SpecialistReferralController extends Controller
         $user = $request->user();
         $specialist = Specialist::where('user_id', $user->id)->firstOrFail();
 
-        $referral = Referral::with(['gp', 'hospital', 'files'])
+        $referral = Referral::with(['gp.user', 'hospital', 'files', 'specialist.user', 'specialist.hospitals'])
             ->where('specialist_id', $specialist->id)
             ->where('referral_type', '!=', 'hospital')
             ->findOrFail($id);
@@ -86,7 +86,7 @@ class SpecialistReferralController extends Controller
     public function status(Request $request, $id)
     {
         $data = $request->validate([
-            'status' => ['required', Rule::in(['accepted', 'consulted', 'closed'])],
+            'status' => ['required', Rule::in(['accepted', 'consulted', 'closed', 'rejected'])],
         ]);
 
         return $this->updateStatus($request, $id, $data['status']);
@@ -108,12 +108,14 @@ class SpecialistReferralController extends Controller
         if ($workflow->force_strict_status_flow ?? false) {
             $allowed = [
                 'accepted' => ['sent'],
+                'rejected' => ['sent', 'accepted'],
                 'consulted' => ['accepted'],
                 'closed' => ['consulted'],
             ];
         } else {
             $allowed = [
                 'accepted' => ['sent'],
+                'rejected' => ['sent', 'accepted'],
                 'consulted' => ['accepted'],
                 'closed' => ($workflow->allow_direct_sent_to_closed ?? false)
                     ? ['sent', 'accepted', 'consulted']
@@ -147,6 +149,11 @@ class SpecialistReferralController extends Controller
             $gpUser = $referral->gp?->user;
             if ($gpUser) {
                 $gpUser->notify(new \App\Notifications\ReferralAcceptedNotification($referral));
+            }
+        } elseif ($newStatus === 'rejected') {
+            $gpUser = $referral->gp?->user;
+            if ($gpUser) {
+                $gpUser->notify(new \App\Notifications\ReferralRejectedNotification($referral));
             }
         } elseif ($newStatus === 'consulted') {
             $gpUser = $referral->gp?->user;

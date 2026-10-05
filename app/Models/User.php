@@ -63,6 +63,26 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::updating(function (User $user) {
+            if (! $user->isDirty('status') || $user->role !== 'gp') {
+                return;
+            }
+
+            $gp = $user->gp;
+            if (! $gp) {
+                return;
+            }
+
+            $gpStatus = $user->status === 'active' ? 'approved' : $user->status;
+            if ($gp->status !== $gpStatus) {
+                $gp->status = $gpStatus;
+                $gp->save();
+            }
+        });
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->role === 'admin';

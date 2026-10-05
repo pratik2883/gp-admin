@@ -81,6 +81,9 @@ class MumbaiThaneHealthcareSeeder extends Seeder
                 ['name' => 'Pulmonology', 'icon_key' => 'pulmonology'],
                 ['name' => 'Urology', 'icon_key' => 'urology'],
                 ['name' => 'Ophthalmology', 'icon_key' => 'ophthalmology'],
+                ['name' => 'Dentist', 'icon_key' => 'dentist'],
+                ['name' => 'Physiotherapist', 'icon_key' => 'physiotherapist'],
+                ['name' => 'Clinical Dietitian', 'icon_key' => 'clinical_dietitian'],
             ];
 
             $specialtyByName = [];

@@ -35,7 +35,7 @@ class FCMService {
     );
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/launcher_icon');
+        AndroidInitializationSettings('ic_stat_notification');
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
@@ -47,6 +47,7 @@ class FCMService {
     const channel = AndroidNotificationChannel(
       'gp_high_importance_channel',
       'High Importance Notifications',
+      description: 'App notifications',
       importance: Importance.max,
     );
     await _localNotificationsPlugin
@@ -56,11 +57,10 @@ class FCMService {
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
 
       _ref.read(unreadCountProvider.notifier).increment();
 
-      if (notification != null && android != null) {
+      if (notification != null) {
         _localNotificationsPlugin.show(
           notification.hashCode,
           notification.title,
@@ -69,8 +69,14 @@ class FCMService {
             android: AndroidNotificationDetails(
               'gp_high_importance_channel',
               'High Importance Notifications',
+              icon: 'ic_stat_notification',
               importance: Importance.max,
               priority: Priority.high,
+            ),
+            iOS: DarwinNotificationDetails(
+              presentAlert: true,
+              presentBadge: true,
+              presentSound: true,
             ),
           ),
           payload: jsonEncode(message.data),
@@ -119,6 +125,11 @@ class FCMService {
       return;
     }
 
+    if (payloadType == 'admin_broadcast') {
+      router.push('/notifications');
+      return;
+    }
+
     // Route based on explicit role in payload, fallback to active AppRole
     final activeRole =
         _ref.read(selectedRoleProvider)?.name; // 'gp' or 'specialist'
@@ -126,7 +137,9 @@ class FCMService {
 
     if (routeRole == 'gp') {
       router.push('/gp/referrals/$targetId');
-    } else if (routeRole == 'specialist') {
+    } else if (routeRole == 'diagnostic') {
+      router.push('/sp/dx-referrals/$targetId');
+    } else {
       router.push('/sp/leads/$targetId');
     }
   }

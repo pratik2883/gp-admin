@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gp_app/core/http/dio_client.dart';
 import 'package:gp_app/features/auth/models/user.dart';
@@ -91,41 +95,83 @@ class SpecialistRepository {
     return SpecialistProfileEnvelope.fromJson(data);
   }
 
-  void _addFormField(FormData form, String key, dynamic value) {
-    if (value == null) return;
-    if (value is List) {
-      for (final item in value) {
-        _addFormField(form, '$key[]', item);
+  Future<String> _fileToBase64(PlatformFile file) async {
+    if (kIsWeb || file.bytes != null) {
+      if (file.bytes != null && file.bytes!.isNotEmpty) {
+        return base64Encode(file.bytes!);
       }
-      return;
     }
-    if (value is Map) {
-      value.forEach((k, v) {
-        _addFormField(form, '$key[$k]', v);
-      });
-      return;
+    if (file.path != null && file.path!.isNotEmpty) {
+      final bytes = await File(file.path!).readAsBytes();
+      return base64Encode(bytes);
     }
-    form.fields.add(MapEntry(key, value.toString()));
+    if (file.bytes != null) {
+      return base64Encode(file.bytes!);
+    }
+    return '';
+  }
+
+  String _guessMime(PlatformFile file) {
+    final ext = file.name.split('.').last.toLowerCase();
+    return switch (ext) {
+      'png' => 'image/png',
+      'gif' => 'image/gif',
+      'webp' => 'image/webp',
+      _ => 'image/jpeg',
+    };
+  }
+
+  String _certGuessMime(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    return switch (ext) {
+      'png' => 'image/png',
+      'gif' => 'image/gif',
+      'webp' => 'image/webp',
+      'pdf' => 'application/pdf',
+      _ => 'image/jpeg',
+    };
   }
 
   Future<User> updateProfile(
     Map<String, dynamic> fields, {
     List<String> certificatePaths = const [],
-    String? profilePhotoPath,
+    PlatformFile? profilePhoto,
   }) async {
-    final form = FormData();
-    fields.forEach((k, v) => _addFormField(form, k, v));
-    for (final p in certificatePaths) {
-      form.files.add(MapEntry('certificates[]', await MultipartFile.fromFile(p)));
-    }
-    if (profilePhotoPath != null && profilePhotoPath.isNotEmpty) {
-      form.files.add(MapEntry('profile_photo', await MultipartFile.fromFile(profilePhotoPath)));
+    final payload = Map<String, dynamic>.from(fields);
+
+    if (profilePhoto != null) {
+      final b64 = await _fileToBase64(profilePhoto);
+      if (b64.isNotEmpty) {
+        payload['profile_photo_base64'] = 'data:${_guessMime(profilePhoto)};base64,$b64';
+        payload['profile_photo_mime'] = _guessMime(profilePhoto);
+      }
     }
 
-    final res = await _dio.patch('/api/specialist/profile', data: form);
-    final data = res.data is Map<String, dynamic> && (res.data as Map<String, dynamic>)['user'] != null
-        ? (res.data as Map<String, dynamic>)['user'] as Map<String, dynamic>
-        : res.data as Map<String, dynamic>;
+    if (certificatePaths.isNotEmpty) {
+      final certs = <Map<String, dynamic>>[];
+      for (final path in certificatePaths) {
+        try {
+          final file = File(path);
+          if (await file.exists()) {
+            final bytes = await file.readAsBytes();
+            certs.add({
+              'data': base64Encode(bytes),
+              'mime': _certGuessMime(path),
+            });
+          }
+        } catch (_) {}
+      }
+      if (certs.isNotEmpty) {
+        payload['certificates_base64'] = certs;
+      }
+    }
+
+    final res = await _dio.patch('/api/specialist/profile', data: payload);
+    final resMap = res.data is Map<String, dynamic> ? res.data as Map<String, dynamic> : <String, dynamic>{};
+    final rawData = (resMap['profile'] as Map<String, dynamic>?) ?? (resMap['user'] as Map<String, dynamic>?) ?? resMap;
+    final data = Map<String, dynamic>.from(rawData);
+    data['role'] = (data['role'] as String?) ?? 'specialist';
+    data['id'] = (data['user_id'] as int?) ?? (data['id'] as int?) ?? 0;
     return User.fromJson(data);
   }
 
@@ -155,19 +201,38 @@ class SpecialistRepository {
   Future<Map<String, dynamic>> register(
     Map<String, dynamic> fields, {
     List<String> certificatePaths = const [],
-    String? profilePhotoPath,
+    PlatformFile? profilePhoto,
   }) async {
-    final form = FormData();
-    fields.forEach((k, v) => _addFormField(form, k, v));
+    final payload = Map<String, dynamic>.from(fields);
 
-    for (final p in certificatePaths) {
-      form.files.add(MapEntry('certificates[]', await MultipartFile.fromFile(p)));
-    }
-    if (profilePhotoPath != null && profilePhotoPath.isNotEmpty) {
-      form.files.add(MapEntry('profile_photo', await MultipartFile.fromFile(profilePhotoPath)));
+    if (profilePhoto != null) {
+      final b64 = await _fileToBase64(profilePhoto);
+      if (b64.isNotEmpty) {
+        payload['profile_photo_base64'] = 'data:${_guessMime(profilePhoto)};base64,$b64';
+        payload['profile_photo_mime'] = _guessMime(profilePhoto);
+      }
     }
 
-    final res = await _dio.post('/api/specialist/register', data: form);
+    if (certificatePaths.isNotEmpty) {
+      final certs = <Map<String, dynamic>>[];
+      for (final path in certificatePaths) {
+        try {
+          final file = File(path);
+          if (await file.exists()) {
+            final bytes = await file.readAsBytes();
+            certs.add({
+              'data': base64Encode(bytes),
+              'mime': _certGuessMime(path),
+            });
+          }
+        } catch (_) {}
+      }
+      if (certs.isNotEmpty) {
+        payload['certificates_base64'] = certs;
+      }
+    }
+
+    final res = await _dio.post('/api/specialist/register', data: payload);
     final data = res.data;
     if (data is Map<String, dynamic>) return data;
     if (data is Map) return data.cast<String, dynamic>();

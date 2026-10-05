@@ -6,6 +6,7 @@ use App\Filament\Resources\Gps\Pages\ManageGps;
 use App\Models\Gp;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -17,10 +18,11 @@ use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class GpResource extends Resource
 {
@@ -175,11 +177,26 @@ class GpResource extends Resource
                     ->label('Default Area')
                     ->toggleable(),
                 TextColumn::make('status')
-                    ->label('Status'),
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'approved' => 'success',
+                        'blocked' => 'danger',
+                        'pending' => 'warning',
+                        default => 'gray',
+                    }),
                 TextColumn::make('created_at')
                     ->label('Signed Up')
                     ->date('d M Y')
                     ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Pending Approval',
+                        'approved' => 'Approved',
+                        'blocked' => 'Blocked',
+                    ]),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -190,18 +207,46 @@ class GpResource extends Resource
                     ->color('success')
                     ->visible(fn (Gp $gp) => $gp->status !== 'approved')
                     ->requiresConfirmation()
-                    ->action(fn (Gp $gp) => $gp->update(['status' => 'approved'])),
+                    ->action(function (Gp $gp): void {
+                        $gp->update(['status' => 'approved']);
+                        $gp->user?->update(['status' => 'active']);
+                    }),
                 Action::make('block')
                     ->label('Block')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn (Gp $gp) => $gp->status !== 'blocked')
                     ->requiresConfirmation()
-                    ->action(fn (Gp $gp) => $gp->update(['status' => 'blocked'])),
+                    ->action(function (Gp $gp): void {
+                        $gp->update(['status' => 'blocked']);
+                        $gp->user?->update(['status' => 'blocked']);
+                    }),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('bulkApprove')
+                        ->label('Approve Selected')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records): void {
+                            foreach ($records as $gp) {
+                                $gp->update(['status' => 'approved']);
+                                $gp->user?->update(['status' => 'active']);
+                            }
+                        }),
+                    BulkAction::make('bulkBlock')
+                        ->label('Block Selected')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records): void {
+                            foreach ($records as $gp) {
+                                $gp->update(['status' => 'blocked']);
+                                $gp->user?->update(['status' => 'blocked']);
+                            }
+                        }),
                     DeleteBulkAction::make(),
                 ]),
             ]);

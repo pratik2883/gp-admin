@@ -48,6 +48,7 @@ class GpProfileController extends Controller
                 'mobile' => $user->mobile,
                 'role' => $user->role,
                 'status' => $user->status,
+                'gp_status' => $gp->status,
             ],
             'gp' => $gp,
         ]);

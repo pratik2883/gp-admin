@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DeviceToken;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FcmPushService
 {
@@ -38,11 +39,17 @@ class FcmPushService
 
         $accessToken = $this->getAccessToken();
         if ($accessToken === null) {
+            Log::warning('FCM push skipped: could not obtain access token.', [
+                'user_id' => $userId,
+                'project_id' => $projectId,
+            ]);
+
             return;
         }
 
         $endpoint = sprintf('https://fcm.googleapis.com/v1/projects/%s/messages:send', $projectId);
 
+        $sent = 0;
         foreach ($tokens as $token) {
             $message = [
                 'message' => array_filter([
@@ -50,6 +57,7 @@ class FcmPushService
                     'notification' => array_filter([
                         'title' => $title,
                         'body' => $body,
+                        'icon' => 'ic_stat_notification',
                     ], fn ($v) => $v !== ''),
                     'data' => $data,
                 ]),
@@ -63,6 +71,8 @@ class FcmPushService
                 $this->forgetAccessToken();
                 $accessToken = $this->getAccessToken();
                 if ($accessToken === null) {
+                    Log::warning('FCM push aborted: access token refresh failed.', ['user_id' => $userId]);
+
                     return;
                 }
 
@@ -72,8 +82,45 @@ class FcmPushService
             }
 
             if (! $response->successful()) {
+                $this->handleDeliveryFailure($response, $userId, $token);
+
                 continue;
             }
+
+            $sent++;
+        }
+
+        Log::info('FCM push sent', [
+            'user_id' => $userId,
+            'tokens' => count($tokens),
+            'delivered' => $sent,
+        ]);
+    }
+
+    private function handleDeliveryFailure($response, int $userId, string $token): void
+    {
+        $error = $response->json('error') ?? [];
+        $code = (string) ($error['status'] ?? '');
+        $message = (string) ($error['message'] ?? '');
+
+        Log::warning('FCM push delivery failed', [
+            'user_id' => $userId,
+            'status_code' => $response->status(),
+            'fcm_status' => $code,
+            'message' => $message,
+            'token_prefix' => substr($token, 0, 24),
+        ]);
+
+        $staleCodes = ['UNREGISTERED', 'INVALID_ARGUMENT', 'NOT_FOUND'];
+        if (in_array($code, $staleCodes, true)) {
+            DeviceToken::query()
+                ->where('user_id', $userId)
+                ->where('token', $token)
+                ->delete();
+            Log::info('FCM stale device token removed', [
+                'user_id' => $userId,
+                'fcm_status' => $code,
+            ]);
         }
     }
 

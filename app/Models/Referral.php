@@ -30,6 +30,7 @@ class Referral extends Model
     ];
 
     protected $casts = [
+        'patient_age' => 'integer',
         'accepted_at' => 'datetime',
         'consulted_at' => 'datetime',
         'closed_at' => 'datetime',

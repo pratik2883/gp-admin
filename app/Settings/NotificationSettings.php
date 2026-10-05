@@ -38,6 +38,10 @@ class NotificationSettings extends Settings
 
     public ?string $message_central_sms_sender_id = null;
 
+    public ?string $message_central_sms_template_id = null;
+
+    public ?string $message_central_sms_entity_id = null;
+
     public ?string $message_central_whatsapp_sender_id = null;
 
     public ?string $mail_from_name = null;
@@ -91,12 +95,15 @@ class NotificationSettings extends Settings
         }
 
         $defaults = [
-            'referral_created' => ['email', 'in_app'],
-            'referral_accepted' => ['email', 'in_app'],
-            'referral_consulted' => ['email', 'in_app'],
-            'referral_closed' => ['email', 'in_app'],
-            'new_gp_registered' => ['email', 'in_app'],
-            'new_specialist_registered' => ['email', 'in_app'],
+            'referral_created' => ['email', 'in_app', 'push'],
+            'referral_accepted' => ['email', 'in_app', 'push'],
+            'referral_consulted' => ['email', 'in_app', 'push'],
+            'referral_closed' => ['email', 'in_app', 'push'],
+            'referral_rejected' => ['email', 'in_app', 'push'],
+            'diagnostic_referral_created' => ['email', 'in_app', 'push'],
+            'diagnostic_referral_status' => ['email', 'in_app', 'push'],
+            'new_gp_registered' => ['email', 'in_app', 'push'],
+            'new_specialist_registered' => ['email', 'in_app', 'push'],
             'subscription_payment_pending' => ['email', 'in_app'],
             'subscription_activated' => ['email', 'in_app', 'push'],
             'subscription_payment_failed' => ['email', 'in_app'],

@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gp_app/app/providers.dart';
+import 'package:gp_app/core/http/dio_client.dart';
 import 'package:gp_app/features/auth/presentation/otp_verify_page.dart';
 import 'package:gp_app/features/auth/state/auth_state.dart';
 import 'package:gp_app/ui/styles.dart';
@@ -55,47 +55,22 @@ class _OtpPhonePageState extends ConsumerState<OtpPhonePage> {
     });
 
     try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
+      final repo = ref.read(authRepositoryProvider);
+      final verificationId = await repo.sendLoginOtp(mobile: phone);
+      if (!mounted) return;
+
+      final prefix = widget.roleHint == 'specialist' ? 'sp' : 'gp';
+      context.push('/$prefix/otp-verify', extra: OtpFlowData(
+        verificationId: verificationId,
         phoneNumber: phone,
-        verificationCompleted: (credential) async {
-          try {
-            final userCred = await FirebaseAuth.instance.signInWithCredential(credential);
-            final idToken = await userCred.user?.getIdToken(true);
-            if (idToken == null || idToken.isEmpty) {
-              if (mounted) setState(() => _error = 'OTP verified but token missing');
-              return;
-            }
-            final err = await ref.read(authStateProvider.notifier).loginWithFirebaseOtp(
-              firebaseIdToken: idToken,
-              roleHint: widget.roleHint,
-            );
-            if (!mounted) return;
-            if (err != null) setState(() => _error = err);
-          } catch (e) {
-            if (mounted) setState(() => _error = e.toString());
-          }
-        },
-        verificationFailed: (e) {
-          if (!mounted) return;
-          setState(() => _error = e.message ?? 'OTP verification failed');
-        },
-        codeSent: (verificationId, resendToken) {
-          if (!mounted) return;
-          final prefix = widget.roleHint == 'specialist' ? 'sp' : 'gp';
-          context.push('/$prefix/otp-verify', extra: OtpFlowData(
-            verificationId: verificationId,
-            resendToken: resendToken as int?,
-            phoneNumber: phone,
-            title: widget.title,
-            roleHint: widget.roleHint,
-            termsAccepted: _termsAccepted,
-          ));
-        },
-        codeAutoRetrievalTimeout: (_) {},
-        timeout: const Duration(seconds: 60),
-      );
+        title: widget.title,
+        roleHint: widget.roleHint,
+        termsAccepted: _termsAccepted,
+      ));
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() => _error = extractApiErrorMessage(e, fallback: 'OTP send failed'));
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }

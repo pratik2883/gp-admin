@@ -26,6 +26,8 @@ mixin _$User {
   String get mobile => throw _privateConstructorUsedError;
   String get role => throw _privateConstructorUsedError;
   int? get gp_id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'gp_status')
+  String? get gpStatus => throw _privateConstructorUsedError;
   int? get specialist_id => throw _privateConstructorUsedError;
   @JsonKey(name: 'registration_number')
   String? get registrationNumber => throw _privateConstructorUsedError;
@@ -61,6 +63,7 @@ abstract class $UserCopyWith<$Res> {
       String mobile,
       String role,
       int? gp_id,
+      @JsonKey(name: 'gp_status') String? gpStatus,
       int? specialist_id,
       @JsonKey(name: 'registration_number') String? registrationNumber,
       String? speciality,
@@ -93,6 +96,7 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? mobile = null,
     Object? role = null,
     Object? gp_id = freezed,
+    Object? gpStatus = freezed,
     Object? specialist_id = freezed,
     Object? registrationNumber = freezed,
     Object? speciality = freezed,
@@ -128,6 +132,10 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
           ? _value.gp_id
           : gp_id // ignore: cast_nullable_to_non_nullable
               as int?,
+      gpStatus: freezed == gpStatus
+          ? _value.gpStatus
+          : gpStatus // ignore: cast_nullable_to_non_nullable
+              as String?,
       specialist_id: freezed == specialist_id
           ? _value.specialist_id
           : specialist_id // ignore: cast_nullable_to_non_nullable
@@ -182,6 +190,7 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
       String mobile,
       String role,
       int? gp_id,
+      @JsonKey(name: 'gp_status') String? gpStatus,
       int? specialist_id,
       @JsonKey(name: 'registration_number') String? registrationNumber,
       String? speciality,
@@ -211,6 +220,7 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? mobile = null,
     Object? role = null,
     Object? gp_id = freezed,
+    Object? gpStatus = freezed,
     Object? specialist_id = freezed,
     Object? registrationNumber = freezed,
     Object? speciality = freezed,
@@ -246,6 +256,10 @@ class __$$UserImplCopyWithImpl<$Res>
           ? _value.gp_id
           : gp_id // ignore: cast_nullable_to_non_nullable
               as int?,
+      gpStatus: freezed == gpStatus
+          ? _value.gpStatus
+          : gpStatus // ignore: cast_nullable_to_non_nullable
+              as String?,
       specialist_id: freezed == specialist_id
           ? _value.specialist_id
           : specialist_id // ignore: cast_nullable_to_non_nullable
@@ -296,6 +310,7 @@ class _$UserImpl implements _User {
       required this.mobile,
       required this.role,
       this.gp_id,
+      @JsonKey(name: 'gp_status') this.gpStatus,
       this.specialist_id,
       @JsonKey(name: 'registration_number') this.registrationNumber,
       this.speciality,
@@ -322,6 +337,9 @@ class _$UserImpl implements _User {
   @override
   final int? gp_id;
   @override
+  @JsonKey(name: 'gp_status')
+  final String? gpStatus;
+  @override
   final int? specialist_id;
   @override
   @JsonKey(name: 'registration_number')
@@ -346,7 +364,7 @@ class _$UserImpl implements _User {
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, email: $email, mobile: $mobile, role: $role, gp_id: $gp_id, specialist_id: $specialist_id, registrationNumber: $registrationNumber, speciality: $speciality, designation: $designation, address: $address, city: $city, clinicName: $clinicName, defaultLocationId: $defaultLocationId, defaultLocationName: $defaultLocationName)';
+    return 'User(id: $id, name: $name, email: $email, mobile: $mobile, role: $role, gp_id: $gp_id, gpStatus: $gpStatus, specialist_id: $specialist_id, registrationNumber: $registrationNumber, speciality: $speciality, designation: $designation, address: $address, city: $city, clinicName: $clinicName, defaultLocationId: $defaultLocationId, defaultLocationName: $defaultLocationName)';
   }
 
   @override
@@ -360,6 +378,8 @@ class _$UserImpl implements _User {
             (identical(other.mobile, mobile) || other.mobile == mobile) &&
             (identical(other.role, role) || other.role == role) &&
             (identical(other.gp_id, gp_id) || other.gp_id == gp_id) &&
+            (identical(other.gpStatus, gpStatus) ||
+                other.gpStatus == gpStatus) &&
             (identical(other.specialist_id, specialist_id) ||
                 other.specialist_id == specialist_id) &&
             (identical(other.registrationNumber, registrationNumber) ||
@@ -388,6 +408,7 @@ class _$UserImpl implements _User {
       mobile,
       role,
       gp_id,
+      gpStatus,
       specialist_id,
       registrationNumber,
       speciality,
@@ -422,6 +443,7 @@ abstract class _User implements User {
       required final String mobile,
       required final String role,
       final int? gp_id,
+      @JsonKey(name: 'gp_status') final String? gpStatus,
       final int? specialist_id,
       @JsonKey(name: 'registration_number') final String? registrationNumber,
       final String? speciality,
@@ -447,6 +469,9 @@ abstract class _User implements User {
   String get role;
   @override
   int? get gp_id;
+  @override
+  @JsonKey(name: 'gp_status')
+  String? get gpStatus;
   @override
   int? get specialist_id;
   @override

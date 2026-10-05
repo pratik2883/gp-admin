@@ -21,7 +21,7 @@ class MessageCentralWhatsAppService
         ?array $variables = null,
         ?array $ctaVariables = null,
     ): ?array {
-        if (! $this->settings->whatsapp_enabled) {
+        if (! $this->settings->message_central_whatsapp_enabled) {
             return null;
         }
 
@@ -92,7 +92,7 @@ class MessageCentralWhatsAppService
         string $to,
         string $message,
     ): ?array {
-        if (! $this->settings->whatsapp_enabled) {
+        if (! $this->settings->message_central_whatsapp_enabled) {
             return null;
         }
 

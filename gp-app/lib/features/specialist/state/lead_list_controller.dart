@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gp_app/features/specialist/data/specialist_repository.dart';
+import 'package:gp_app/features/specialist/state/lead_list_refreshable.dart';
 import 'package:gp_app/features/specialist/state/lead_list_state.dart';
 
-class LeadListController extends StateNotifier<LeadListState> {
+class LeadListController extends StateNotifier<LeadListState> implements LeadListRefreshable {
   final SpecialistRepository _repo;
   LeadListController(this._repo) : super(const LeadListState());
 
+  @override
   Future<void> refresh({String? q, String? status}) async {
     state = state.copyWith(refreshing: true, query: q ?? state.query, status: status ?? state.status, page: 1, error: null);
     try {
@@ -18,6 +20,7 @@ class LeadListController extends StateNotifier<LeadListState> {
     }
   }
 
+  @override
   Future<void> loadMore() async {
     if (state.loading || !state.hasMore) return;
     state = state.copyWith(loading: true, error: null);

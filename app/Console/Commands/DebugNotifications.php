@@ -21,7 +21,7 @@ use Illuminate\Console\Command;
 class DebugNotifications extends Command
 {
     protected $signature = 'notifications:debug
-        {action? : status|test-sms|test-whatsapp|test-email|test-inapp|test-push|test-all-events|test-referral-flow|firebase-otp}
+        {action? : status|test-sms|test-mc-sms|test-whatsapp|test-email|test-inapp|test-push|test-all-events|test-referral-flow|firebase-otp}
         {--user= : User ID to send test to}
         {--mobile= : Mobile number for SMS/WhatsApp test}
         {--event= : Specific event name for channel resolution}';
@@ -35,6 +35,7 @@ class DebugNotifications extends Command
         return match ($action) {
             'status' => $this->showStatus(),
             'test-sms' => $this->testSms(),
+            'test-mc-sms' => $this->testMessageCentralSms(),
             'test-whatsapp' => $this->testWhatsApp(),
             'test-email' => $this->testEmail(),
             'test-inapp' => $this->testInApp(),
@@ -67,6 +68,19 @@ class DebugNotifications extends Command
             ['twilio_verify_service_sid', $ns->twilio_verify_service_sid ? substr($ns->twilio_verify_service_sid, 0, 8).'...' : '(not set)'],
             ['mail_from_name', $ns->mail_from_name ?? '(not set)'],
             ['mail_from_address', $ns->mail_from_address ?? '(not set)'],
+        ]);
+
+        $this->newLine();
+        $this->info('=== MessageCentral Settings ===');
+        $this->table(['Setting', 'Value'], [
+            ['message_central_sms_enabled', $ns->message_central_sms_enabled ? '✅ true' : '❌ false'],
+            ['message_central_whatsapp_enabled', $ns->message_central_whatsapp_enabled ? '✅ true' : '❌ false'],
+            ['customer_id', $ns->message_central_customer_id ?? config('services.message_central.customer_id') ?? '❌ (not set)'],
+            ['email', $ns->message_central_email ?? config('services.message_central.email') ?? '(not set)'],
+            ['sms_sender_id', $ns->message_central_sms_sender_id ?? config('services.message_central.otp_sender_id') ?? '❌ (not set)'],
+            ['sms_template_id', $ns->message_central_sms_template_id ?? '(not set)'],
+            ['sms_entity_id', $ns->message_central_sms_entity_id ?? '(not set)'],
+            ['whatsapp_sender_id', $ns->message_central_whatsapp_sender_id ?? '(not set)'],
         ]);
 
         $this->newLine();
@@ -145,6 +159,44 @@ class DebugNotifications extends Command
             $this->info('✅ SMS sent successfully!');
         } catch (\Throwable $e) {
             $this->error("❌ SMS failed: {$e->getMessage()}");
+            return self::FAILURE;
+        }
+
+        return self::SUCCESS;
+    }
+
+    private function testMessageCentralSms(): int
+    {
+        $mobile = $this->option('mobile');
+        if (! $mobile) {
+            $user = $this->resolveUser();
+            if (! $user) return self::FAILURE;
+            $mobile = $user->mobile;
+            if (! $mobile) {
+                $this->error("User {$user->id} has no mobile number");
+                return self::FAILURE;
+            }
+        }
+
+        $ns = app(NotificationSettings::class);
+        if (! $ns->message_central_sms_enabled) {
+            $this->warn('MessageCentral SMS is disabled in settings');
+            if (! $this->confirm('Send anyway?')) {
+                return self::FAILURE;
+            }
+        }
+
+        $this->info("Sending test MessageCentral SMS to {$mobile}...");
+        try {
+            $res = app(\App\Services\MessageCentralSmsService::class)->sendSms($mobile, 'Test MessageCentral SMS from GP-Admin debug command at '.now()->format('d M Y H:i:s'));
+            $this->info('✅ MessageCentral SMS request finished!');
+            if ($res) {
+                $this->line('Response: '.json_encode($res, JSON_PRETTY_PRINT));
+            } else {
+                $this->warn('No response array returned (check storage/logs/laravel.log)');
+            }
+        } catch (\Throwable $e) {
+            $this->error("❌ MessageCentral SMS failed: {$e->getMessage()}");
             return self::FAILURE;
         }
 

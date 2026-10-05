@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -28,12 +29,15 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _mobile = TextEditingController();
+  final _whatsappNumber = TextEditingController();
   final _speciality = TextEditingController();
   final _hospitalName = TextEditingController();
   final _clinicStreet = TextEditingController();
   final _clinicArea = TextEditingController();
   final _clinicCity = TextEditingController();
   final _clinicPincode = TextEditingController();
+  final _clinicTimings = TextEditingController();
+  final _hospitalVisitingHours = TextEditingController();
   final _registrationNo = TextEditingController();
   final _councilName = TextEditingController();
   final _qualifications = TextEditingController();
@@ -45,6 +49,8 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
   final _videos = TextEditingController();
   bool _consultationInPerson = true;
   bool _consultationTeleconsult = false;
+  bool _showMobileNumber = true;
+  bool _showWhatsappNumber = true;
   List<Map<String, dynamic>> _specialties = [];
   bool _loadingSpecialties = false;
   String? _selectedSpecialtySlug;
@@ -68,18 +74,22 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
       try {
         final subtype = ref.read(selectedSubtypeProvider);
         final env = await ref.read(specialistRepositoryProvider).fetchProfileEnvelope();
-        final flags = await ref.read(publicFeatureFlagsProvider.future);
         final p = env.profile;
         setState(() {
           _name.text = p.name ?? '';
           _email.text = p.email ?? '';
           _mobile.text = p.mobile ?? '';
+          _whatsappNumber.text = p.whatsappNumber ?? p.mobile ?? '';
           _speciality.text = p.speciality ?? '';
           _hospitalName.text = p.hospitalName ?? '';
           _clinicStreet.text = p.clinicStreet ?? '';
           _clinicArea.text = p.clinicArea ?? '';
           _clinicCity.text = p.clinicCity ?? '';
           _clinicPincode.text = p.clinicPincode ?? '';
+          _clinicTimings.text = p.clinicTimings ?? '';
+          _hospitalVisitingHours.text = p.hospitalVisitingHours ?? '';
+          _showMobileNumber = p.showMobileNumber;
+          _showWhatsappNumber = p.showWhatsappNumber;
           _registrationNo.text = p.registrationNo ?? '';
           _councilName.text = p.councilName ?? '';
           _qualifications.text = (p.qualifications ?? const []).join(', ');
@@ -92,11 +102,6 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
           _profilePhotoUrl = p.profilePhoto;
           _allowVideos = env.allowVideos;
           _allowCertificates = env.allowCertificates;
-          _addressAutocompleteEnabled = flags['enable_google_address_autocomplete'] == true;
-          _googlePlacesApiKey = flags['google_places_api_key']?.toString();
-          _googlePlacesCountryCode = (flags['google_places_country_code']?.toString().trim().isNotEmpty ?? false)
-              ? flags['google_places_country_code'].toString()
-              : 'IN';
           _certificateUrls = List<String>.from(p.certificates ?? const []);
           _additionalSpecialtyIds
             ..clear()
@@ -106,6 +111,21 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
           _selectedSpecialtySlug = p.primarySpecialtyCode;
           _loading = false;
         });
+
+        try {
+          final flags = await ref.read(publicFeatureFlagsProvider.future);
+          if (mounted) {
+            setState(() {
+              _addressAutocompleteEnabled = flags['enable_google_address_autocomplete'] == true;
+              _googlePlacesApiKey = flags['google_places_api_key']?.toString();
+              _googlePlacesCountryCode = (flags['google_places_country_code']?.toString().trim().isNotEmpty ?? false)
+                  ? flags['google_places_country_code'].toString()
+                  : 'IN';
+            });
+          }
+        } catch (e) {
+          debugPrint('[SpProfilePage] Failed to load feature flags: $e');
+        }
 
         final isSpecialist = subtype != RoleSubtype.hospital && subtype != RoleSubtype.diagnostic;
         if (isSpecialist) {
@@ -131,7 +151,8 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
             if (mounted) setState(() => _loadingSpecialties = false);
           }
         }
-      } catch (_) {
+      } catch (e) {
+        debugPrint('[SpProfilePage] Failed to load profile: $e');
         setState(() => _loading = false);
       }
     });
@@ -142,6 +163,7 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
     _name.dispose();
     _email.dispose();
     _mobile.dispose();
+    _whatsappNumber.dispose();
     _speciality.dispose();
     _hospitalName.dispose();
     _clinicStreet.dispose();
@@ -245,11 +267,12 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
       allowMultiple: true,
       type: FileType.custom,
       allowedExtensions: const ['pdf', 'jpg', 'jpeg', 'png'],
+      withData: true,
     );
     if (!mounted) return;
     if (res == null) return;
     setState(() {
-      _newCertificates.addAll(res.files.where((f) => f.path != null));
+      _newCertificates.addAll(res.files.where((f) => f.bytes != null || (!kIsWeb && f.path != null)));
     });
   }
 
@@ -258,21 +281,24 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
       allowMultiple: false,
       type: FileType.custom,
       allowedExtensions: const ['jpg', 'jpeg', 'png'],
+      withData: true,
     );
     if (!mounted) return;
     if (res == null || res.files.isEmpty) return;
     final picked = res.files.first;
-    if (picked.path == null || picked.path!.isEmpty) return;
+    if (picked.bytes == null && (!kIsWeb && picked.path == null)) return;
     setState(() => _profilePhotoFile = picked);
   }
 
   Future<void> _save() async {
+    final subtype = ref.read(selectedSubtypeProvider);
+    final isHospital = subtype == RoleSubtype.hospital;
     final required = <String, String>{
       'Full Name': _name.text.trim(),
       'Email': _email.text.trim(),
       'Mobile': _mobile.text.trim(),
       'Specialty': _speciality.text.trim(),
-      'Hospital Name': _hospitalName.text.trim(),
+      if (isHospital) 'Hospital Name': _hospitalName.text.trim(),
       'Street': _clinicStreet.text.trim(),
       'Area': _clinicArea.text.trim(),
       'City': _clinicCity.text.trim(),
@@ -303,6 +329,7 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
         'name': _name.text.trim(),
         'email': _email.text.trim(),
         'mobile': _mobile.text.trim(),
+        'whatsapp_number': _whatsappNumber.text.trim(),
         'speciality': isSpecialist ? (selectedLabel ?? _speciality.text.trim()) : _speciality.text.trim(),
         'hospital_name': _hospitalName.text.trim(),
         'clinic_street': _clinicStreet.text.trim(),
@@ -328,6 +355,10 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
           'in_person': _consultationInPerson,
           'teleconsult': _consultationTeleconsult,
         },
+        'clinic_timings': _clinicTimings.text.trim(),
+        'hospital_visiting_hours': _hospitalVisitingHours.text.trim(),
+        'show_mobile_number': _showMobileNumber,
+        'show_whatsapp_number': _showWhatsappNumber,
         'bio': _bio.text.trim(),
         if (isSpecialist && (_selectedSpecialtySlug ?? '').isNotEmpty) 'specialty_code': _selectedSpecialtySlug,
         if (isSpecialist) 'additional_specialty_ids': _additionalSpecialtyIds,
@@ -338,17 +369,54 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
               .where((e) => e.isNotEmpty)
               .toList(),
       },
-          certificatePaths: _allowCertificates ? _newCertificates.where((f) => f.path != null).map((f) => f.path!).toList() : const [],
-          profilePhotoPath: _profilePhotoFile?.path);
-      ref.read(authStateProvider.notifier).updateUser(updated);
-      if (mounted) {
-        setState(() {
-          _newCertificates.clear();
-          if (_profilePhotoFile?.path != null) {
-            _profilePhotoUrl = _profilePhotoFile!.path;
-          }
-          _profilePhotoFile = null;
-        });
+          certificatePaths: _allowCertificates ? _newCertificates.where((f) => !kIsWeb && f.path != null).map((f) => f.path!).toList() : const [],
+          profilePhoto: _profilePhotoFile);
+      try {
+        final freshProfile = await ref.read(specialistRepositoryProvider).fetchProfile();
+        ref.read(authStateProvider.notifier).updateUser(updated);
+        if (mounted) {
+          setState(() {
+            _name.text = freshProfile.name ?? _name.text;
+            _email.text = freshProfile.email ?? _email.text;
+            _mobile.text = freshProfile.mobile ?? _mobile.text;
+            _whatsappNumber.text = freshProfile.whatsappNumber ?? _whatsappNumber.text;
+            _speciality.text = freshProfile.speciality ?? _speciality.text;
+            _hospitalName.text = freshProfile.hospitalName ?? _hospitalName.text;
+            _clinicStreet.text = freshProfile.clinicStreet ?? _clinicStreet.text;
+            _clinicArea.text = freshProfile.clinicArea ?? _clinicArea.text;
+            _clinicCity.text = freshProfile.clinicCity ?? _clinicCity.text;
+            _clinicPincode.text = freshProfile.clinicPincode ?? _clinicPincode.text;
+            _registrationNo.text = freshProfile.registrationNo ?? _registrationNo.text;
+            _councilName.text = freshProfile.councilName ?? _councilName.text;
+            _qualifications.text = (freshProfile.qualifications ?? const []).join(', ');
+            _yearsExperience.text = freshProfile.yearsOfExperience?.toString() ?? _yearsExperience.text;
+            _subSpecialties.text = freshProfile.subSpecialties ?? _subSpecialties.text;
+            _keyProcedures.text = freshProfile.keyProcedures ?? _keyProcedures.text;
+            _languages.text = (freshProfile.languages ?? const []).join(', ');
+            _clinicTimings.text = freshProfile.clinicTimings ?? _clinicTimings.text;
+            _hospitalVisitingHours.text = freshProfile.hospitalVisitingHours ?? _hospitalVisitingHours.text;
+            _showMobileNumber = freshProfile.showMobileNumber;
+            _showWhatsappNumber = freshProfile.showWhatsappNumber;
+            _consultationInPerson = freshProfile.consultationInPerson ?? _consultationInPerson;
+            _consultationTeleconsult = freshProfile.consultationTeleconsult ?? _consultationTeleconsult;
+            _bio.text = freshProfile.bio ?? _bio.text;
+            _profilePhotoUrl = freshProfile.profilePhoto;
+            _selectedSpecialtySlug = freshProfile.primarySpecialtyCode ?? _selectedSpecialtySlug;
+            _additionalSpecialtyIds
+              ..clear()
+              ..addAll(freshProfile.additionalSpecialtyIds ?? const []);
+            _newCertificates.clear();
+            _profilePhotoFile = null;
+          });
+        }
+      } catch (e) {
+        debugPrint('[SpProfilePage] Failed to refresh after save: $e');
+        if (mounted) {
+          setState(() {
+            _newCertificates.clear();
+            _profilePhotoFile = null;
+          });
+        }
       }
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
     } catch (_) {
@@ -457,6 +525,8 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
                               LabeledTextField(controller: _email, label: 'Email Address', hintText: 'example@mail.com', keyboardType: TextInputType.emailAddress),
                               const SizedBox(height: 16),
                               LabeledTextField(controller: _mobile, label: 'Mobile Number', hintText: '+91', keyboardType: TextInputType.phone),
+                              const SizedBox(height: 16),
+                              LabeledTextField(controller: _whatsappNumber, label: 'WhatsApp Number', hintText: '+91', keyboardType: TextInputType.phone),
                             ],
                           ),
                         ),
@@ -595,6 +665,29 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
                               const SizedBox(height: 16),
                               LabeledTextField(controller: _clinicPincode, label: 'Pincode', hintText: 'Pincode', keyboardType: TextInputType.number),
                               const SizedBox(height: 16),
+                              LabeledTextField(controller: _clinicTimings, label: 'Clinic Visit Timings', hintText: 'e.g. Mon-Sat: 10:00 AM - 1:00 PM, 5:00 PM - 8:00 PM', maxLines: 2),
+                              const SizedBox(height: 16),
+                              LabeledTextField(controller: _hospitalVisitingHours, label: 'Hospital Visit Timings', hintText: 'e.g. Mon, Wed, Fri: 2:00 PM - 4:00 PM', maxLines: 2),
+                              const SizedBox(height: 16),
+                              const SectionHeaderRow(title: 'Contact Privacy'),
+                              const SizedBox(height: 8),
+                              SwitchListTile(
+                                value: _showMobileNumber,
+                                onChanged: (v) => setState(() => _showMobileNumber = v),
+                                title: const Text('Show Mobile Number on Profile'),
+                                subtitle: const Text('Allow GPs and hospitals to see your mobile number'),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              SwitchListTile(
+                                value: _showWhatsappNumber,
+                                onChanged: (v) => setState(() => _showWhatsappNumber = v),
+                                title: const Text('Show WhatsApp Number'),
+                                subtitle: const Text('Allow direct WhatsApp messaging'),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              const SizedBox(height: 16),
                               LabeledTextField(controller: _bio, label: 'Bio', hintText: 'Write short professional bio', maxLines: 4),
                             ],
                           ),
@@ -660,9 +753,14 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
   }
 
   ImageProvider? _buildProfileImage() {
-    final localPath = _profilePhotoFile?.path;
-    if (localPath != null && localPath.isNotEmpty) {
-      return FileImage(File(localPath));
+    final file = _profilePhotoFile;
+    if (file != null) {
+      if (file.bytes != null && file.bytes!.isNotEmpty) {
+        return MemoryImage(file.bytes!);
+      }
+      if (!kIsWeb && file.path != null && file.path!.isNotEmpty) {
+        return FileImage(File(file.path!));
+      }
     }
     final url = (_profilePhotoUrl ?? '').trim();
     if (url.isNotEmpty) {

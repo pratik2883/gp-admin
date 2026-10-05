@@ -10,6 +10,7 @@ use App\Models\Specialty;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class GpDashboardController extends Controller
 {
@@ -185,9 +186,19 @@ SQL;
                 'id' => $specialist->id,
                 'specialist_id' => $specialist->id,
                 'name' => $specialist->user?->name,
+                'profile_photo' => $specialist->profile_photo_path
+                    ? (is_file(public_path($specialist->profile_photo_path)) ? url($specialist->profile_photo_path) : Storage::disk('public')->url($specialist->profile_photo_path))
+                    : null,
                 'speciality' => $specialtyLabel,
                 'hospital_name' => $specialist->hospital_name ?: $primaryHospital?->name,
                 'clinic_address' => $specialist->clinic_address,
+                'clinic_timings' => $specialist->clinic_timings,
+                'hospital_visiting_hours' => $specialist->hospital_visiting_hours,
+                'available_days' => $specialist->available_days ?? [],
+                'show_mobile_number' => (bool) ($specialist->show_mobile_number ?? true),
+                'show_whatsapp_number' => (bool) ($specialist->show_whatsapp_number ?? true),
+                'mobile' => ($specialist->show_mobile_number ?? true) ? $specialist->user?->mobile : null,
+                'whatsapp_number' => ($specialist->show_whatsapp_number ?? true) ? $specialist->whatsapp_number : null,
                 'years_of_experience' => $specialist->years_of_experience,
                 'languages' => $specialist->languages ?? [],
                 'consultation_flags' => [

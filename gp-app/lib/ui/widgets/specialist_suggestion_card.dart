@@ -117,6 +117,20 @@ class SpecialistSuggestionCard extends StatelessWidget {
   }
 
   Widget _avatar() {
+    final photo = specialist.profilePhoto?.trim();
+    if (photo != null && photo.isNotEmpty) {
+      return Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          image: DecorationImage(
+            image: NetworkImage(photo),
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
     final initials = getInitials(specialist.name);
     return Container(
       width: 42,

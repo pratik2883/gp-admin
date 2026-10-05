@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\DiagnosticCenterAuthController;
 use App\Http\Controllers\Api\DiagnosticCenterProfileController;
+use App\Http\Controllers\Api\DiagnosticReferralController;
+use App\Http\Controllers\Api\GlobalSearchController;
 use App\Http\Controllers\Api\GpDashboardController;
 use App\Http\Controllers\Api\GpDiagnosticsController;
 use App\Http\Controllers\Api\GpProfileController;
@@ -58,6 +60,7 @@ Route::prefix('public')->group(function () {
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('send-otp', [OtpAuthController::class, 'sendLoginOtp']);
     Route::post('login-with-otp', [AuthController::class, 'loginWithOtp']);
     Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 });
@@ -100,6 +103,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('support-tickets', [SupportTicketController::class, 'store']);
     Route::get('support-tickets/{ticketId}', [SupportTicketController::class, 'show']);
     Route::post('support-tickets/{ticketId}/reply', [SupportTicketController::class, 'reply']);
+
+    // Global Search
+    Route::get('search', [GlobalSearchController::class, 'search']);
 
     // Master data
     Route::get('locations', [MasterDataController::class, 'locations']);
@@ -166,6 +172,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [DiagnosticCenterProfileController::class, 'show']);
         Route::patch('/profile', [DiagnosticCenterProfileController::class, 'update']);
         Route::post('/profile', [DiagnosticCenterProfileController::class, 'update']);
+        Route::get('/referrals', [DiagnosticReferralController::class, 'index']);
+        Route::get('/referrals/{id}', [DiagnosticReferralController::class, 'show']);
+        Route::patch('/referrals/{id}/status', [DiagnosticReferralController::class, 'status']);
     });
 
     /*
@@ -192,11 +201,32 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/gps/{id}', [AdminGpController::class, 'show']);
         Route::put('/gps/{id}', [AdminGpController::class, 'update']);
         Route::patch('/gps/{id}/status', [AdminGpController::class, 'status']);
-        Route::get('/specialists', [AdminSpecialistController::class, 'index']);
-        Route::post('/specialists', [AdminSpecialistController::class, 'store']);
         Route::get('/specialists/{id}', [AdminSpecialistController::class, 'show']);
         Route::put('/specialists/{id}', [AdminSpecialistController::class, 'update']);
         Route::patch('/specialists/{id}/status', [AdminSpecialistController::class, 'status']);
+    });
+
+    /*
+    |--------------------------------------------------------------
+    | MR (Medical Representative) routes
+    |--------------------------------------------------------------
+    */
+    Route::prefix('mr')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Api\MrController::class, 'dashboard']);
+        Route::post('/attendance/check-in', [\App\Http\Controllers\Api\MrController::class, 'checkIn']);
+        Route::post('/attendance/check-out', [\App\Http\Controllers\Api\MrController::class, 'checkOut']);
+        Route::get('/visits', [\App\Http\Controllers\Api\MrController::class, 'getVisits']);
+        Route::post('/visits', [\App\Http\Controllers\Api\MrController::class, 'logVisit']);
+        Route::post('/onboard-doctor', [\App\Http\Controllers\Api\MrController::class, 'onboardDoctor']);
+        Route::get('/non-active-gps', [\App\Http\Controllers\Api\MrController::class, 'nonActiveGps']);
+        Route::get('/expiring-subscriptions', [\App\Http\Controllers\Api\MrController::class, 'expiringSubscriptions']);
+        Route::post('/payment-link', [\App\Http\Controllers\Api\MrController::class, 'generatePaymentLink']);
+        Route::get('/collaterals', [\App\Http\Controllers\Api\MrController::class, 'getCollaterals']);
+        Route::post('/leaves', [\App\Http\Controllers\Api\MrController::class, 'applyLeave']);
+        Route::get('/leaves', [\App\Http\Controllers\Api\MrController::class, 'getLeaves']);
+        Route::get('/calendar', [\App\Http\Controllers\Api\MrController::class, 'calendar']);
+        Route::get('/profile', [\App\Http\Controllers\Api\MrController::class, 'getProfile']);
+        Route::post('/change-password', [\App\Http\Controllers\Api\MrController::class, 'changePassword']);
     });
 
 });

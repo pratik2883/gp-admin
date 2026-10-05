@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DiagnosticReferral;
 use App\Models\DiagnosticService;
 use App\Models\Specialist;
+use App\Notifications\DiagnosticReferralCreatedNotification;
 use App\Settings\GeneralSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -124,6 +125,11 @@ class SpecialistDiagnosticReferralController extends Controller
         }
 
         $diagnosticReferral->load(['center', 'services', 'files']);
+
+        $centerUser = $diagnosticReferral->center?->user;
+        if ($centerUser) {
+            $centerUser->notify(new DiagnosticReferralCreatedNotification($diagnosticReferral));
+        }
 
         return response()->json([
             'id' => $diagnosticReferral->id,

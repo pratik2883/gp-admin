@@ -23,10 +23,10 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyB5yfwp27zsTT3QHSEwAHNRQrv93yjD-wg',
-    appId: '1:702258131869:android:c8467508bb3152c695b574',
-    messagingSenderId: '702258131869',
-    projectId: 'gp-specialist',
-    storageBucket: 'gp-specialist.firebasestorage.app',
+    apiKey: 'AIzaSyDAb9PmLmlu_coLeqXH0_q_uQbrjupzleo',
+    appId: '1:405660832385:android:cf67150af80035245a7380',
+    messagingSenderId: '405660832385',
+    projectId: 'specialistconnectpro',
+    storageBucket: 'specialistconnectpro.firebasestorage.app',
   );
 }

@@ -29,6 +29,13 @@
 *.jks
 *.pem
 gp-specialist-firebase-adminsdk-fbsvc-190ebe2c83.json
+specialistconnectpro-firebase-adminsdk-fbsvc-4cf4b0be47.json
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+new_upload.zip
+*.zip
+
+/releases/
+

@@ -16,6 +16,9 @@ import 'package:gp_app/features/gp/state/new_referral_state.dart';
 import 'package:gp_app/features/gp/models/recommended_specialist.dart';
 import 'package:gp_app/features/specialist/data/specialist_repository.dart';
 import 'package:gp_app/features/diagnostic_center/data/diagnostic_center_repository.dart';
+import 'package:gp_app/features/diagnostic_center/state/dx_referral_list_controller.dart';
+import 'package:gp_app/features/diagnostic_center/state/dx_referral_detail_controller.dart';
+import 'package:gp_app/features/diagnostic_center/state/dx_referral_detail_state.dart';
 import 'package:gp_app/features/support/data/support_repository.dart';
 import 'package:gp_app/features/support/state/support_ticket_detail_controller.dart';
 import 'package:gp_app/features/support/state/support_ticket_list_controller.dart';
@@ -110,7 +113,7 @@ final publicFeatureFlagsProvider = FutureProvider<Map<String, dynamic>>((ref) as
 
 final gpRepositoryProvider = Provider<GpRepository>((ref) => GpRepository(ref.read(dioClientProvider)));
 final gpHomeControllerProvider = StateNotifierProvider<GpHomeController, GpHomeState>(
-  (ref) => GpHomeController(ref.read(gpRepositoryProvider)),
+  (ref) => GpHomeController(ref.read(gpRepositoryProvider), ref),
 );
 final referralListControllerProvider = StateNotifierProvider<ReferralListController, ReferralListState>(
   (ref) => ReferralListController(ref.read(gpRepositoryProvider)),
@@ -227,6 +230,13 @@ final spLeadListControllerProvider = StateNotifierProvider<sp.LeadListController
 );
 final spLeadDetailControllerProvider = StateNotifierProvider<sp.LeadDetailController, sp.LeadDetailState>(
   (ref) => sp.LeadDetailController(ref.read(specialistRepositoryProvider)),
+);
+final dxReferralListControllerProvider = StateNotifierProvider<DxReferralListController, sp.LeadListState>(
+  (ref) => DxReferralListController(ref.read(diagnosticCenterRepositoryProvider)),
+);
+final dxReferralDetailControllerProvider =
+    StateNotifierProvider<DxReferralDetailController, DxReferralDetailState>(
+  (ref) => DxReferralDetailController(ref.read(diagnosticCenterRepositoryProvider)),
 );
 
 final locationServiceProvider = Provider<LocationService>((ref) => LocationService());

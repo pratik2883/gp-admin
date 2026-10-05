@@ -47,6 +47,8 @@ class NotificationSettings extends Page implements HasForms
             'message_central_password' => $store->message_central_password,
             'message_central_email' => $store->message_central_email,
             'message_central_sms_sender_id' => $store->message_central_sms_sender_id,
+            'message_central_sms_template_id' => $store->message_central_sms_template_id,
+            'message_central_sms_entity_id' => $store->message_central_sms_entity_id,
             'message_central_whatsapp_sender_id' => $store->message_central_whatsapp_sender_id,
             'mail_from_name' => $store->mail_from_name,
             'mail_from_address' => $store->mail_from_address,
@@ -63,12 +65,15 @@ class NotificationSettings extends Page implements HasForms
     private function getDefaultEventChannels(): array
     {
         return [
-            ['event' => 'referral_created', 'channels' => ['email', 'in_app']],
-            ['event' => 'referral_accepted', 'channels' => ['email', 'in_app']],
-            ['event' => 'referral_consulted', 'channels' => ['email', 'in_app']],
-            ['event' => 'referral_closed', 'channels' => ['email', 'in_app']],
-            ['event' => 'new_gp_registered', 'channels' => ['email', 'in_app']],
-            ['event' => 'new_specialist_registered', 'channels' => ['email', 'in_app']],
+            ['event' => 'referral_created', 'channels' => ['email', 'in_app', 'push']],
+            ['event' => 'referral_accepted', 'channels' => ['email', 'in_app', 'push']],
+            ['event' => 'referral_consulted', 'channels' => ['email', 'in_app', 'push']],
+            ['event' => 'referral_closed', 'channels' => ['email', 'in_app', 'push']],
+            ['event' => 'referral_rejected', 'channels' => ['email', 'in_app', 'push']],
+            ['event' => 'diagnostic_referral_created', 'channels' => ['email', 'in_app', 'push']],
+            ['event' => 'diagnostic_referral_status', 'channels' => ['email', 'in_app', 'push']],
+            ['event' => 'new_gp_registered', 'channels' => ['email', 'in_app', 'push']],
+            ['event' => 'new_specialist_registered', 'channels' => ['email', 'in_app', 'push']],
             ['event' => 'subscription_payment_pending', 'channels' => ['email', 'in_app']],
             ['event' => 'subscription_activated', 'channels' => ['email', 'in_app', 'push']],
             ['event' => 'subscription_payment_failed', 'channels' => ['email', 'in_app']],
@@ -86,6 +91,9 @@ class NotificationSettings extends Page implements HasForms
             'referral_accepted' => 'Referral accepted',
             'referral_consulted' => 'Referral consulted',
             'referral_closed' => 'Referral closed',
+            'referral_rejected' => 'Referral rejected',
+            'diagnostic_referral_created' => 'Diagnostic referral created',
+            'diagnostic_referral_status' => 'Diagnostic referral status',
             'new_gp_registered' => 'New GP registered',
             'new_specialist_registered' => 'New specialist registered',
             'subscription_payment_pending' => 'Subscription payment pending',
@@ -178,6 +186,12 @@ class NotificationSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('message_central_sms_sender_id')
                             ->label('SMS Sender ID')
                             ->placeholder('6-char sender ID'),
+                        Forms\Components\TextInput::make('message_central_sms_template_id')
+                            ->label('SMS Template ID')
+                            ->placeholder('Optional DLT template ID'),
+                        Forms\Components\TextInput::make('message_central_sms_entity_id')
+                            ->label('SMS Entity ID')
+                            ->placeholder('Optional DLT entity ID'),
                         Forms\Components\TextInput::make('message_central_whatsapp_sender_id')
                             ->label('WhatsApp Sender ID (WABA)')
                             ->placeholder('91XXXXXXXXXX'),
@@ -234,27 +248,39 @@ class NotificationSettings extends Page implements HasForms
                             ->default([
                                 [
                                     'event' => 'referral_created',
-                                    'channels' => ['email', 'in_app'],
+                                    'channels' => ['email', 'in_app', 'push'],
                                 ],
                                 [
                                     'event' => 'referral_accepted',
-                                    'channels' => ['email', 'in_app'],
+                                    'channels' => ['email', 'in_app', 'push'],
                                 ],
                                 [
                                     'event' => 'referral_consulted',
-                                    'channels' => ['email', 'in_app'],
+                                    'channels' => ['email', 'in_app', 'push'],
                                 ],
                                 [
                                     'event' => 'referral_closed',
-                                    'channels' => ['email', 'in_app'],
+                                    'channels' => ['email', 'in_app', 'push'],
+                                ],
+                                [
+                                    'event' => 'referral_rejected',
+                                    'channels' => ['email', 'in_app', 'push'],
+                                ],
+                                [
+                                    'event' => 'diagnostic_referral_created',
+                                    'channels' => ['email', 'in_app', 'push'],
+                                ],
+                                [
+                                    'event' => 'diagnostic_referral_status',
+                                    'channels' => ['email', 'in_app', 'push'],
                                 ],
                                 [
                                     'event' => 'new_gp_registered',
-                                    'channels' => ['email', 'in_app'],
+                                    'channels' => ['email', 'in_app', 'push'],
                                 ],
                                 [
                                     'event' => 'new_specialist_registered',
-                                    'channels' => ['email', 'in_app'],
+                                    'channels' => ['email', 'in_app', 'push'],
                                 ],
                             ])
                             ->columns(1)

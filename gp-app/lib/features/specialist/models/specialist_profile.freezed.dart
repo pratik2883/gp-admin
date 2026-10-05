@@ -44,6 +44,16 @@ mixin _$SpecialistProfile {
   String? get clinicPincode => throw _privateConstructorUsedError;
   @JsonKey(name: 'clinic_address')
   String? get clinicAddress => throw _privateConstructorUsedError;
+  @JsonKey(name: 'clinic_timings')
+  String? get clinicTimings => throw _privateConstructorUsedError;
+  @JsonKey(name: 'hospital_visiting_hours')
+  String? get hospitalVisitingHours => throw _privateConstructorUsedError;
+  @JsonKey(name: 'show_mobile_number')
+  bool get showMobileNumber => throw _privateConstructorUsedError;
+  @JsonKey(name: 'show_whatsapp_number')
+  bool get showWhatsappNumber => throw _privateConstructorUsedError;
+  @JsonKey(name: 'whatsapp_number')
+  String? get whatsappNumber => throw _privateConstructorUsedError;
   @JsonKey(name: 'registration_no')
   String? get registrationNo => throw _privateConstructorUsedError;
   @JsonKey(name: 'council_name')
@@ -99,6 +109,11 @@ abstract class $SpecialistProfileCopyWith<$Res> {
       @JsonKey(name: 'clinic_city') String? clinicCity,
       @JsonKey(name: 'clinic_pincode') String? clinicPincode,
       @JsonKey(name: 'clinic_address') String? clinicAddress,
+      @JsonKey(name: 'clinic_timings') String? clinicTimings,
+      @JsonKey(name: 'hospital_visiting_hours') String? hospitalVisitingHours,
+      @JsonKey(name: 'show_mobile_number') bool showMobileNumber,
+      @JsonKey(name: 'show_whatsapp_number') bool showWhatsappNumber,
+      @JsonKey(name: 'whatsapp_number') String? whatsappNumber,
       @JsonKey(name: 'registration_no') String? registrationNo,
       @JsonKey(name: 'council_name') String? councilName,
       List<String>? qualifications,
@@ -143,6 +158,11 @@ class _$SpecialistProfileCopyWithImpl<$Res, $Val extends SpecialistProfile>
     Object? clinicCity = freezed,
     Object? clinicPincode = freezed,
     Object? clinicAddress = freezed,
+    Object? clinicTimings = freezed,
+    Object? hospitalVisitingHours = freezed,
+    Object? showMobileNumber = null,
+    Object? showWhatsappNumber = null,
+    Object? whatsappNumber = freezed,
     Object? registrationNo = freezed,
     Object? councilName = freezed,
     Object? qualifications = freezed,
@@ -213,6 +233,26 @@ class _$SpecialistProfileCopyWithImpl<$Res, $Val extends SpecialistProfile>
       clinicAddress: freezed == clinicAddress
           ? _value.clinicAddress
           : clinicAddress // ignore: cast_nullable_to_non_nullable
+              as String?,
+      clinicTimings: freezed == clinicTimings
+          ? _value.clinicTimings
+          : clinicTimings // ignore: cast_nullable_to_non_nullable
+              as String?,
+      hospitalVisitingHours: freezed == hospitalVisitingHours
+          ? _value.hospitalVisitingHours
+          : hospitalVisitingHours // ignore: cast_nullable_to_non_nullable
+              as String?,
+      showMobileNumber: null == showMobileNumber
+          ? _value.showMobileNumber
+          : showMobileNumber // ignore: cast_nullable_to_non_nullable
+              as bool,
+      showWhatsappNumber: null == showWhatsappNumber
+          ? _value.showWhatsappNumber
+          : showWhatsappNumber // ignore: cast_nullable_to_non_nullable
+              as bool,
+      whatsappNumber: freezed == whatsappNumber
+          ? _value.whatsappNumber
+          : whatsappNumber // ignore: cast_nullable_to_non_nullable
               as String?,
       registrationNo: freezed == registrationNo
           ? _value.registrationNo
@@ -295,6 +335,11 @@ abstract class _$$SpecialistProfileImplCopyWith<$Res>
       @JsonKey(name: 'clinic_city') String? clinicCity,
       @JsonKey(name: 'clinic_pincode') String? clinicPincode,
       @JsonKey(name: 'clinic_address') String? clinicAddress,
+      @JsonKey(name: 'clinic_timings') String? clinicTimings,
+      @JsonKey(name: 'hospital_visiting_hours') String? hospitalVisitingHours,
+      @JsonKey(name: 'show_mobile_number') bool showMobileNumber,
+      @JsonKey(name: 'show_whatsapp_number') bool showWhatsappNumber,
+      @JsonKey(name: 'whatsapp_number') String? whatsappNumber,
       @JsonKey(name: 'registration_no') String? registrationNo,
       @JsonKey(name: 'council_name') String? councilName,
       List<String>? qualifications,
@@ -337,6 +382,11 @@ class __$$SpecialistProfileImplCopyWithImpl<$Res>
     Object? clinicCity = freezed,
     Object? clinicPincode = freezed,
     Object? clinicAddress = freezed,
+    Object? clinicTimings = freezed,
+    Object? hospitalVisitingHours = freezed,
+    Object? showMobileNumber = null,
+    Object? showWhatsappNumber = null,
+    Object? whatsappNumber = freezed,
     Object? registrationNo = freezed,
     Object? councilName = freezed,
     Object? qualifications = freezed,
@@ -407,6 +457,26 @@ class __$$SpecialistProfileImplCopyWithImpl<$Res>
       clinicAddress: freezed == clinicAddress
           ? _value.clinicAddress
           : clinicAddress // ignore: cast_nullable_to_non_nullable
+              as String?,
+      clinicTimings: freezed == clinicTimings
+          ? _value.clinicTimings
+          : clinicTimings // ignore: cast_nullable_to_non_nullable
+              as String?,
+      hospitalVisitingHours: freezed == hospitalVisitingHours
+          ? _value.hospitalVisitingHours
+          : hospitalVisitingHours // ignore: cast_nullable_to_non_nullable
+              as String?,
+      showMobileNumber: null == showMobileNumber
+          ? _value.showMobileNumber
+          : showMobileNumber // ignore: cast_nullable_to_non_nullable
+              as bool,
+      showWhatsappNumber: null == showWhatsappNumber
+          ? _value.showWhatsappNumber
+          : showWhatsappNumber // ignore: cast_nullable_to_non_nullable
+              as bool,
+      whatsappNumber: freezed == whatsappNumber
+          ? _value.whatsappNumber
+          : whatsappNumber // ignore: cast_nullable_to_non_nullable
               as String?,
       registrationNo: freezed == registrationNo
           ? _value.registrationNo
@@ -484,6 +554,11 @@ class _$SpecialistProfileImpl implements _SpecialistProfile {
       @JsonKey(name: 'clinic_city') this.clinicCity,
       @JsonKey(name: 'clinic_pincode') this.clinicPincode,
       @JsonKey(name: 'clinic_address') this.clinicAddress,
+      @JsonKey(name: 'clinic_timings') this.clinicTimings,
+      @JsonKey(name: 'hospital_visiting_hours') this.hospitalVisitingHours,
+      @JsonKey(name: 'show_mobile_number') this.showMobileNumber = true,
+      @JsonKey(name: 'show_whatsapp_number') this.showWhatsappNumber = true,
+      @JsonKey(name: 'whatsapp_number') this.whatsappNumber,
       @JsonKey(name: 'registration_no') this.registrationNo,
       @JsonKey(name: 'council_name') this.councilName,
       final List<String>? qualifications,
@@ -563,6 +638,21 @@ class _$SpecialistProfileImpl implements _SpecialistProfile {
   @JsonKey(name: 'clinic_address')
   final String? clinicAddress;
   @override
+  @JsonKey(name: 'clinic_timings')
+  final String? clinicTimings;
+  @override
+  @JsonKey(name: 'hospital_visiting_hours')
+  final String? hospitalVisitingHours;
+  @override
+  @JsonKey(name: 'show_mobile_number')
+  final bool showMobileNumber;
+  @override
+  @JsonKey(name: 'show_whatsapp_number')
+  final bool showWhatsappNumber;
+  @override
+  @JsonKey(name: 'whatsapp_number')
+  final String? whatsappNumber;
+  @override
   @JsonKey(name: 'registration_no')
   final String? registrationNo;
   @override
@@ -631,7 +721,7 @@ class _$SpecialistProfileImpl implements _SpecialistProfile {
 
   @override
   String toString() {
-    return 'SpecialistProfile(id: $id, name: $name, email: $email, mobile: $mobile, speciality: $speciality, primarySpecialtyCode: $primarySpecialtyCode, additionalSpecialtyIds: $additionalSpecialtyIds, additionalSpecialtyLabels: $additionalSpecialtyLabels, hospitalName: $hospitalName, clinicStreet: $clinicStreet, clinicArea: $clinicArea, clinicCity: $clinicCity, clinicPincode: $clinicPincode, clinicAddress: $clinicAddress, registrationNo: $registrationNo, councilName: $councilName, qualifications: $qualifications, yearsOfExperience: $yearsOfExperience, subSpecialties: $subSpecialties, keyProcedures: $keyProcedures, languages: $languages, consultationInPerson: $consultationInPerson, consultationTeleconsult: $consultationTeleconsult, bio: $bio, videos: $videos, certificates: $certificates, profilePhoto: $profilePhoto)';
+    return 'SpecialistProfile(id: $id, name: $name, email: $email, mobile: $mobile, speciality: $speciality, primarySpecialtyCode: $primarySpecialtyCode, additionalSpecialtyIds: $additionalSpecialtyIds, additionalSpecialtyLabels: $additionalSpecialtyLabels, hospitalName: $hospitalName, clinicStreet: $clinicStreet, clinicArea: $clinicArea, clinicCity: $clinicCity, clinicPincode: $clinicPincode, clinicAddress: $clinicAddress, clinicTimings: $clinicTimings, hospitalVisitingHours: $hospitalVisitingHours, showMobileNumber: $showMobileNumber, showWhatsappNumber: $showWhatsappNumber, whatsappNumber: $whatsappNumber, registrationNo: $registrationNo, councilName: $councilName, qualifications: $qualifications, yearsOfExperience: $yearsOfExperience, subSpecialties: $subSpecialties, keyProcedures: $keyProcedures, languages: $languages, consultationInPerson: $consultationInPerson, consultationTeleconsult: $consultationTeleconsult, bio: $bio, videos: $videos, certificates: $certificates, profilePhoto: $profilePhoto)';
   }
 
   @override
@@ -663,6 +753,16 @@ class _$SpecialistProfileImpl implements _SpecialistProfile {
                 other.clinicPincode == clinicPincode) &&
             (identical(other.clinicAddress, clinicAddress) ||
                 other.clinicAddress == clinicAddress) &&
+            (identical(other.clinicTimings, clinicTimings) ||
+                other.clinicTimings == clinicTimings) &&
+            (identical(other.hospitalVisitingHours, hospitalVisitingHours) ||
+                other.hospitalVisitingHours == hospitalVisitingHours) &&
+            (identical(other.showMobileNumber, showMobileNumber) ||
+                other.showMobileNumber == showMobileNumber) &&
+            (identical(other.showWhatsappNumber, showWhatsappNumber) ||
+                other.showWhatsappNumber == showWhatsappNumber) &&
+            (identical(other.whatsappNumber, whatsappNumber) ||
+                other.whatsappNumber == whatsappNumber) &&
             (identical(other.registrationNo, registrationNo) ||
                 other.registrationNo == registrationNo) &&
             (identical(other.councilName, councilName) ||
@@ -708,6 +808,11 @@ class _$SpecialistProfileImpl implements _SpecialistProfile {
         clinicCity,
         clinicPincode,
         clinicAddress,
+        clinicTimings,
+        hospitalVisitingHours,
+        showMobileNumber,
+        showWhatsappNumber,
+        whatsappNumber,
         registrationNo,
         councilName,
         const DeepCollectionEquality().hash(_qualifications),
@@ -759,6 +864,12 @@ abstract class _SpecialistProfile implements SpecialistProfile {
       @JsonKey(name: 'clinic_city') final String? clinicCity,
       @JsonKey(name: 'clinic_pincode') final String? clinicPincode,
       @JsonKey(name: 'clinic_address') final String? clinicAddress,
+      @JsonKey(name: 'clinic_timings') final String? clinicTimings,
+      @JsonKey(name: 'hospital_visiting_hours')
+      final String? hospitalVisitingHours,
+      @JsonKey(name: 'show_mobile_number') final bool showMobileNumber,
+      @JsonKey(name: 'show_whatsapp_number') final bool showWhatsappNumber,
+      @JsonKey(name: 'whatsapp_number') final String? whatsappNumber,
       @JsonKey(name: 'registration_no') final String? registrationNo,
       @JsonKey(name: 'council_name') final String? councilName,
       final List<String>? qualifications,
@@ -815,6 +926,21 @@ abstract class _SpecialistProfile implements SpecialistProfile {
   @override
   @JsonKey(name: 'clinic_address')
   String? get clinicAddress;
+  @override
+  @JsonKey(name: 'clinic_timings')
+  String? get clinicTimings;
+  @override
+  @JsonKey(name: 'hospital_visiting_hours')
+  String? get hospitalVisitingHours;
+  @override
+  @JsonKey(name: 'show_mobile_number')
+  bool get showMobileNumber;
+  @override
+  @JsonKey(name: 'show_whatsapp_number')
+  bool get showWhatsappNumber;
+  @override
+  @JsonKey(name: 'whatsapp_number')
+  String? get whatsappNumber;
   @override
   @JsonKey(name: 'registration_no')
   String? get registrationNo;

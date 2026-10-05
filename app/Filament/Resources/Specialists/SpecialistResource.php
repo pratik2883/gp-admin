@@ -145,9 +145,11 @@ class SpecialistResource extends Resource
                             $ids = array_values(array_filter($ids, fn ($id) => $primaryId <= 0 || $id !== $primaryId));
                             $record->additionalSpecialties()->sync($ids);
                         }),
+                    TextInput::make('whatsapp_number')
+                        ->label('WhatsApp Number')
+                        ->maxLength(20),
                     TextInput::make('hospital_name')
                         ->label('Hospital Name')
-                        ->required()
                         ->maxLength(190),
                     TextInput::make('medical_council_registration_no')
                         ->label('Registration No.')
@@ -163,6 +165,9 @@ class SpecialistResource extends Resource
                 ->columns(3),
             Section::make('Clinic Details')
                 ->schema([
+                    TextInput::make('clinic_name')
+                        ->label('Clinic Name')
+                        ->maxLength(190),
                     TextInput::make('clinic_street')
                         ->label('Street')
                         ->required()
@@ -214,6 +219,20 @@ class SpecialistResource extends Resource
                         ->columnSpanFull(),
                     TagsInput::make('languages')
                         ->label('Languages'),
+                    Textarea::make('clinic_timings')
+                        ->label('Clinic Visit Timings')
+                        ->placeholder('e.g. Mon-Sat: 10:00 AM - 1:00 PM, 5:00 PM - 8:00 PM')
+                        ->rows(2),
+                    Textarea::make('hospital_visiting_hours')
+                        ->label('Hospital Visiting Hours')
+                        ->placeholder('e.g. Mon, Wed, Fri: 2:00 PM - 4:00 PM')
+                        ->rows(2),
+                    Toggle::make('show_mobile_number')
+                        ->label('Show Mobile Number on Profile')
+                        ->default(true),
+                    Toggle::make('show_whatsapp_number')
+                        ->label('Show WhatsApp Number on Profile')
+                        ->default(true),
                     Toggle::make('consultation_in_person')
                         ->label('In-person Consultation')
                         ->default(true),
@@ -268,7 +287,8 @@ class SpecialistResource extends Resource
                 TextEntry::make('profile_photo_path')
                     ->placeholder('-'),
                 TextEntry::make('whatsapp_number')
-                    ->placeholder('-'),
+                    ->label('Whatsapp number')
+                    ->formatStateUsing(fn ($state, Specialist $record) => $state ?: ($record->user?->mobile ?: '-')),
                 TextEntry::make('primary_specialization')
                     ->placeholder('-'),
                 TextEntry::make('medical_council_registration_no')

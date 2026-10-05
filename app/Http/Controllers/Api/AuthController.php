@@ -7,8 +7,9 @@ use App\Models\Gp;
 use App\Models\Specialist;
 use App\Models\Specialty;
 use App\Models\User;
-use App\Services\FirebaseIdTokenVerifier;
 use App\Services\CcaVenuePaymentService;
+use App\Services\FirebaseIdTokenVerifier;
+use App\Services\MessageCentralSmsService;
 use App\Services\RazorpayService;
 use App\Services\SubscriptionService;
 use App\Settings\GeneralSettings;
@@ -28,7 +29,10 @@ class AuthController extends Controller
     public function loginWithOtp(Request $request)
     {
         $v = Validator::make($request->all(), [
-            'firebase_id_token' => ['required', 'string'],
+            'firebase_id_token' => ['nullable', 'string'],
+            'verification_id' => ['nullable', 'string'],
+            'otp_code' => ['nullable', 'string', 'digits_between:4,6'],
+            'mobile' => ['nullable', 'string', 'max:20'],
             'role_hint' => ['nullable', Rule::in(['gp', 'specialist'])],
             'terms_accepted' => 'accepted',
         ]);
@@ -40,30 +44,81 @@ class AuthController extends Controller
         if (! $otpSettings->enable_otp_login) {
             return response()->json(['message' => 'OTP login is disabled.'], 403);
         }
-        if (! is_string($otpSettings->firebase_project_id) || $otpSettings->firebase_project_id === '') {
-            return response()->json(['message' => 'Firebase Project ID is not configured.'], 422);
-        }
 
-        $idToken = (string) $request->input('firebase_id_token');
         $roleHint = $request->input('role_hint');
+        $firebaseToken = (string) $request->input('firebase_id_token', '');
+        $name = null;
+        $email = null;
 
-        try {
-            $claims = app(FirebaseIdTokenVerifier::class)->verify($idToken, (string) $otpSettings->firebase_project_id);
-        } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
+        if ($firebaseToken !== '') {
+            if (! is_string($otpSettings->firebase_project_id) || $otpSettings->firebase_project_id === '') {
+                return response()->json(['message' => 'Firebase Project ID is not configured.'], 422);
+            }
 
-        $phone = $this->normalizePhone((string) ($claims['phone_number'] ?? ''));
-        $name = is_string($claims['name'] ?? null) ? (string) $claims['name'] : null;
-        $email = is_string($claims['email'] ?? null) ? (string) $claims['email'] : null;
+            try {
+                $claims = app(FirebaseIdTokenVerifier::class)->verify($firebaseToken, (string) $otpSettings->firebase_project_id);
+            } catch (RuntimeException $e) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
 
-        if ($phone === '') {
-            return response()->json(['message' => 'Firebase token does not contain phone number.'], 422);
+            $phone = $this->normalizePhone((string) ($claims['phone_number'] ?? ''));
+            $name = is_string($claims['name'] ?? null) ? (string) $claims['name'] : null;
+            $email = is_string($claims['email'] ?? null) ? (string) $claims['email'] : null;
+
+            if ($phone === '') {
+                return response()->json(['message' => 'Firebase token does not contain phone number.'], 422);
+            }
+        } else {
+            $phone = OtpAuthController::canonicalize((string) $request->input('mobile', ''));
+            if ($phone === '') {
+                return response()->json(['message' => 'Mobile number is required for OTP login.'], 422);
+            }
+
+            $verificationId = (string) $request->input('verification_id', '');
+            $otpCode = (string) $request->input('otp_code', '');
+
+            $cached = cache()->get('login_otp_'.$phone);
+            if (! is_array($cached)) {
+                return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+            }
+
+            if (($cached['mode'] ?? '') === 'local') {
+                if ((string) ($cached['otp'] ?? '') !== $otpCode) {
+                    return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+                }
+            } else {
+                if ((string) ($cached['verification_id'] ?? '') !== $verificationId) {
+                    return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+                }
+
+                $otpResponse = app(MessageCentralSmsService::class)->validateOtp($verificationId, $otpCode);
+                $status = (string) data_get($otpResponse, 'data.verificationStatus', '');
+
+                if ($status !== 'VERIFICATION_COMPLETED') {
+                    $code = (int) (data_get($otpResponse, 'data.code') ?? data_get($otpResponse, 'code') ?? 0);
+
+                    $failure = match ($code) {
+                        702 => 'Invalid OTP.',
+                        703 => 'OTP has already been verified.',
+                        705 => 'OTP has expired.',
+                        800 => 'Maximum OTP attempts reached. Please request a new OTP.',
+                        505, 506 => 'Invalid verification. Please request a new OTP.',
+                        default => 'OTP verification failed. Please try again.',
+                    };
+
+                    return response()->json([
+                        'message' => $failure,
+                        'code' => $code ?: null,
+                    ], 422);
+                }
+            }
+
+            cache()->forget('login_otp_'.$phone);
         }
 
         $user = $this->findUserByPhone($phone);
         if (! $user) {
-            $user = new User();
+            $user = new User;
             $user->mobile = $phone;
             $user->name = $name ?: 'User';
             $user->email = $email ?: ($phone.'@example.test');
@@ -100,6 +155,7 @@ class AuthController extends Controller
     private function normalizePhone(string $phone): string
     {
         $p = preg_replace('/[^\d+]/', '', $phone) ?? '';
+
         return trim($p);
     }
 
@@ -144,19 +200,19 @@ class AuthController extends Controller
             // If user exists but has no GP/specialist record, check if it's a partial registration
             if ($existingUser->role === 'gp' && ! $existingUser->gp()->exists()) {
                 // Clean up orphaned user from partial registration
-                Log::info('Cleaning up partial GP registration for user ID: ' . $existingUser->id);
+                Log::info('Cleaning up partial GP registration for user ID: '.$existingUser->id);
                 $existingUser->delete();
             } elseif ($existingUser->role === 'specialist' && ! $existingUser->specialist()->exists()) {
                 // Clean up orphaned user from partial registration
-                Log::info('Cleaning up partial specialist registration for user ID: ' . $existingUser->id);
+                Log::info('Cleaning up partial specialist registration for user ID: '.$existingUser->id);
                 $existingUser->delete();
             } else {
                 // Genuine duplicate - return error
                 return response()->json([
                     'message' => 'The email has already been taken.',
                     'errors' => [
-                        'email' => ['The email has already been taken.']
-                    ]
+                        'email' => ['The email has already been taken.'],
+                    ],
                 ], 422);
             }
         }
@@ -190,7 +246,7 @@ class AuthController extends Controller
                 return $user;
             });
         } catch (\Throwable $e) {
-            Log::error('Registration failed: ' . $e->getMessage(), [
+            Log::error('Registration failed: '.$e->getMessage(), [
                 'email' => $data['email'],
                 'mobile' => $data['mobile'],
                 'role' => $data['role'],
@@ -224,6 +280,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:190',
             'email' => 'nullable|email|max:190|unique:users,email',
             'mobile' => 'required|string|max:20|unique:users,mobile',
+            'whatsapp_number' => 'nullable|string|max:20',
             'password' => 'required|string|min:6',
             'role_subtype' => ['required', Rule::in(['specialist', 'hospital'])],
             'subscription_plan_id' => [$paymentsEnabled ? 'required' : 'nullable', 'integer'],
@@ -243,6 +300,8 @@ class AuthController extends Controller
             'certificates' => $settings->allow_profile_certificates_for_specialists ? 'nullable|array' : 'prohibited',
             'certificates.*' => $settings->allow_profile_certificates_for_specialists ? 'file|max:10240' : 'prohibited',
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'profile_photo_base64' => 'nullable|string',
+            'profile_photo_mime' => 'nullable|string|max:30',
             'terms_accepted' => 'accepted',
         ]);
 
@@ -266,6 +325,7 @@ class AuthController extends Controller
             ]);
 
             $specialist = Specialist::firstOrCreate(['user_id' => $user->id], []);
+            $specialist->whatsapp_number = !empty($data['whatsapp_number']) ? $data['whatsapp_number'] : $data['mobile'];
             if (! empty($data['specialty_code'])) {
                 $specialist->specialty_id = Specialty::query()
                     ->where('code', $data['specialty_code'])
@@ -317,6 +377,39 @@ class AuthController extends Controller
                 }
                 $specialist->profile_photo_path = $request->file('profile_photo')
                     ->store('specialists/'.$user->id, 'public');
+            } elseif (! empty($data['profile_photo_base64'])) {
+                $raw = $data['profile_photo_base64'];
+                $mime = $data['profile_photo_mime'] ?? 'image/jpeg';
+                if (str_starts_with($raw, 'data:')) {
+                    $parts = explode(';', $raw, 2);
+                    if (count($parts) === 2 && str_starts_with($parts[0], 'data:')) {
+                        $mime = substr($parts[0], 5);
+                        $raw = $parts[1];
+                    }
+                    if (str_starts_with($raw, 'base64,')) {
+                        $raw = substr($raw, 7);
+                    }
+                }
+                $decoded = base64_decode($raw, true);
+                if ($decoded !== false && strlen($decoded) > 0) {
+                    $ext = match($mime) {
+                        'image/png' => 'png',
+                        'image/gif' => 'gif',
+                        'image/webp' => 'webp',
+                        default => 'jpg',
+                    };
+                    $filename = 'profile_'.time().'.'.$ext;
+                    $publicDir = public_path('specialists/'.$user->id);
+                    if (! is_dir($publicDir)) {
+                        mkdir($publicDir, 0755, true);
+                    }
+                    file_put_contents($publicDir.'/'.$filename, $decoded);
+                    $storedPath = 'specialists/'.$user->id.'/'.$filename;
+                    if ($specialist->profile_photo_path) {
+                        Storage::disk('public')->delete($specialist->profile_photo_path);
+                    }
+                    $specialist->profile_photo_path = $storedPath;
+                }
             }
             if ($settings->allow_profile_certificates_for_specialists && $request->hasFile('certificates')) {
                 $existing = is_array($specialist->certificates) ? $specialist->certificates : [];
@@ -326,6 +419,33 @@ class AuthController extends Controller
                         continue;
                     }
                     $uploaded[] = $file->store('specialists/'.$user->id.'/certificates', 'public');
+                }
+                $specialist->certificates = array_values(array_merge($existing, $uploaded));
+            } elseif ($settings->allow_profile_certificates_for_specialists && ! empty($data['certificates_base64']) && is_array($data['certificates_base64'])) {
+                $existing = is_array($specialist->certificates) ? $specialist->certificates : [];
+                $uploaded = [];
+                foreach ($data['certificates_base64'] as $cert) {
+                    if (empty($cert['data']) || empty($cert['mime'])) {
+                        continue;
+                    }
+                    $decoded = base64_decode($cert['data'], true);
+                    if ($decoded === false || strlen($decoded) === 0) {
+                        continue;
+                    }
+                    $ext = match($cert['mime']) {
+                        'image/png' => 'png',
+                        'image/gif' => 'gif',
+                        'image/webp' => 'webp',
+                        default => 'jpg',
+                    };
+                    $filename = 'cert_'.time().'_'.bin2hex(random_bytes(4)).'.'.$ext;
+                    $publicDir = public_path('specialists/'.$user->id.'/certificates');
+                    if (! is_dir($publicDir)) {
+                        mkdir($publicDir, 0755, true);
+                    }
+                    $storedPath = 'specialists/'.$user->id.'/certificates/'.$filename;
+                    file_put_contents($publicDir.'/'.$filename, $decoded);
+                    $uploaded[] = $storedPath;
                 }
                 $specialist->certificates = array_values(array_merge($existing, $uploaded));
             }
@@ -442,6 +562,7 @@ class AuthController extends Controller
             'role' => $user->role,
             'role_subtype' => $user->role_subtype,
             'gp_id' => $user->gp()->value('id'),
+            'gp_status' => $user->gp()->value('status'),
             'specialist_id' => $user->specialist()->value('id'),
             'diagnostic_center_id' => $user->diagnosticCenter()->value('id'),
             'subscription' => app(SubscriptionService::class)->latestSummaryFor($user),

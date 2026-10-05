@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -26,6 +27,7 @@ class _SpRegisterPageState extends ConsumerState<SpRegisterPage> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _mobile = TextEditingController();
+  final _whatsappNumber = TextEditingController();
   final _password = TextEditingController();
   final _hospitalName = TextEditingController();
   final _clinicStreet = TextEditingController();
@@ -51,6 +53,7 @@ class _SpRegisterPageState extends ConsumerState<SpRegisterPage> {
   String? _googlePlacesApiKey;
   String _googlePlacesCountryCode = 'IN';
   final List<PlatformFile> _certificateFiles = [];
+  PlatformFile? _profilePhotoFile;
   bool _submitting = false;
   bool _termsAccepted = false;
 
@@ -111,6 +114,7 @@ class _SpRegisterPageState extends ConsumerState<SpRegisterPage> {
     _name.dispose();
     _email.dispose();
     _mobile.dispose();
+    _whatsappNumber.dispose();
     _password.dispose();
     _hospitalName.dispose();
     _clinicStreet.dispose();
@@ -217,6 +221,19 @@ class _SpRegisterPageState extends ConsumerState<SpRegisterPage> {
     });
   }
 
+  Future<void> _pickProfilePhoto() async {
+    final res = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: const ['jpg', 'jpeg', 'png'],
+    );
+    if (!mounted) return;
+    if (res == null || res.files.isEmpty) return;
+    final picked = res.files.first;
+    if ((picked.path == null || picked.path!.isEmpty) && picked.bytes == null) return;
+    setState(() => _profilePhotoFile = picked);
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_subscriptionPaymentsEnabled && _selectedPlanId == null) {
@@ -240,6 +257,7 @@ class _SpRegisterPageState extends ConsumerState<SpRegisterPage> {
           'name': _name.text.trim(),
           'email': _email.text.trim().isEmpty ? null : _email.text.trim(),
           'mobile': _mobile.text.trim(),
+          'whatsapp_number': _whatsappNumber.text.trim().isEmpty ? _mobile.text.trim() : _whatsappNumber.text.trim(),
           'password': _password.text,
           'role_subtype': roleSubtype,
           if (_subscriptionPaymentsEnabled) 'subscription_plan_id': _selectedPlanId,
@@ -262,6 +280,7 @@ class _SpRegisterPageState extends ConsumerState<SpRegisterPage> {
                 .toList(),
         },
         certificatePaths: _allowCertificates ? _certificateFiles.where((f) => f.path != null).map((f) => f.path!).toList() : const [],
+        profilePhoto: _profilePhotoFile,
       );
       final payment = response['payment'] is Map
           ? (response['payment'] as Map).cast<String, dynamic>()
@@ -475,13 +494,20 @@ class _SpRegisterPageState extends ConsumerState<SpRegisterPage> {
                             CircleAvatar(
                               radius: 44,
                               backgroundColor: AppColors.primaryBlue.withAlpha(20),
-                              child: const Icon(Icons.person_add_rounded, size: 40, color: AppColors.primaryBlue),
+                              backgroundImage: _profilePhotoFile != null
+                                  ? _profilePhotoFile!.path != null
+                                      ? FileImage(File(_profilePhotoFile!.path!)) as ImageProvider
+                                      : MemoryImage(_profilePhotoFile!.bytes!)
+                                  : null,
+                              child: _profilePhotoFile == null
+                                  ? const Icon(Icons.person_add_rounded, size: 40, color: AppColors.primaryBlue)
+                                  : null,
                             ),
                             const SizedBox(height: 12),
                             TextButton.icon(
-                              onPressed: () {}, 
-                              icon: const Icon(Icons.add_a_photo_outlined, size: 18), 
-                              label: const Text('Add Profile Photo'),
+                              onPressed: _pickProfilePhoto,
+                              icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                              label: Text(_profilePhotoFile == null ? 'Add Profile Photo' : 'Change Profile Photo'),
                               style: TextButton.styleFrom(foregroundColor: AppColors.primaryBlue),
                             ),
                           ],
@@ -509,6 +535,13 @@ class _SpRegisterPageState extends ConsumerState<SpRegisterPage> {
                         controller: _mobile, 
                         label: 'Mobile Number', 
                         hintText: 'Enter 10-digit mobile number',
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 16),
+                      LabeledTextField(
+                        controller: _whatsappNumber, 
+                        label: 'WhatsApp Number (Optional)', 
+                        hintText: 'If different from mobile number',
                         keyboardType: TextInputType.phone,
                       ),
                       const SizedBox(height: 16),

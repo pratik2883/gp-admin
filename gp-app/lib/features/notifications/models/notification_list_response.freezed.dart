@@ -14,11 +14,6 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-NotificationListResponse _$NotificationListResponseFromJson(
-    Map<String, dynamic> json) {
-  return _NotificationListResponse.fromJson(json);
-}
-
 /// @nodoc
 mixin _$NotificationListResponse {
   List<AppNotification> get data => throw _privateConstructorUsedError;
@@ -27,9 +22,6 @@ mixin _$NotificationListResponse {
   int get currentPage => throw _privateConstructorUsedError;
   @JsonKey(name: 'last_page')
   int get lastPage => throw _privateConstructorUsedError;
-
-  /// Serializes this NotificationListResponse to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
   /// Create a copy of NotificationListResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -151,7 +143,7 @@ class __$$NotificationListResponseImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
 class _$NotificationListResponseImpl implements _NotificationListResponse {
   const _$NotificationListResponseImpl(
       {final List<AppNotification> data = const [],
@@ -159,9 +151,6 @@ class _$NotificationListResponseImpl implements _NotificationListResponse {
       @JsonKey(name: 'current_page') this.currentPage = 1,
       @JsonKey(name: 'last_page') this.lastPage = 1})
       : _data = data;
-
-  factory _$NotificationListResponseImpl.fromJson(Map<String, dynamic> json) =>
-      _$$NotificationListResponseImplFromJson(json);
 
   final List<AppNotification> _data;
   @override
@@ -200,7 +189,6 @@ class _$NotificationListResponseImpl implements _NotificationListResponse {
                 other.lastPage == lastPage));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType,
       const DeepCollectionEquality().hash(_data), total, currentPage, lastPage);
@@ -213,13 +201,6 @@ class _$NotificationListResponseImpl implements _NotificationListResponse {
   _$$NotificationListResponseImplCopyWith<_$NotificationListResponseImpl>
       get copyWith => __$$NotificationListResponseImplCopyWithImpl<
           _$NotificationListResponseImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$NotificationListResponseImplToJson(
-      this,
-    );
-  }
 }
 
 abstract class _NotificationListResponse implements NotificationListResponse {
@@ -229,9 +210,6 @@ abstract class _NotificationListResponse implements NotificationListResponse {
           @JsonKey(name: 'current_page') final int currentPage,
           @JsonKey(name: 'last_page') final int lastPage}) =
       _$NotificationListResponseImpl;
-
-  factory _NotificationListResponse.fromJson(Map<String, dynamic> json) =
-      _$NotificationListResponseImpl.fromJson;
 
   @override
   List<AppNotification> get data;

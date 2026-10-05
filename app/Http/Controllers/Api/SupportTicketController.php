@@ -155,19 +155,23 @@ class SupportTicketController extends Controller
 
     private function resolveRoleType(User $user): string
     {
-        if ($user->role === 'gp' && $user->gp()->exists()) {
+        if ($user->role === 'gp') {
             return 'gp';
         }
 
-        if ($user->diagnosticCenter()->exists()) {
+        if ($user->role_subtype === 'hospital' || $user->role === 'hospital') {
+            return 'hospital';
+        }
+
+        if ($user->role_subtype === 'diagnostic_center' || $user->role === 'diagnostic_center' || $user->diagnosticCenter()->exists()) {
             return 'diagnostic_center';
         }
 
-        if ($user->role === 'specialist' && $user->specialist()->exists()) {
+        if ($user->role === 'specialist') {
             return 'specialist';
         }
 
-        abort(403, 'Support is only available for GP, Specialist, and Diagnostic Center accounts.');
+        return 'gp';
     }
 
     /**

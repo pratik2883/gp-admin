@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gp_app/app/providers.dart';
+import 'package:gp_app/core/http/dio_client.dart';
 import 'package:gp_app/features/auth/state/auth_state.dart';
 import 'package:gp_app/ui/styles.dart';
 import 'package:gp_app/ui/widgets/app_card.dart';
@@ -30,7 +30,6 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
   final _codeCtrl = TextEditingController();
 
   String? _verificationId;
-  int? _forceResendingToken;
   bool _sending = false;
   bool _verifying = false;
   bool _termsAccepted = false;
@@ -60,46 +59,14 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     });
 
     try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phone,
-        forceResendingToken: _forceResendingToken,
-        verificationCompleted: (credential) async {
-          try {
-            final userCred = await FirebaseAuth.instance.signInWithCredential(credential);
-            final idToken = await userCred.user?.getIdToken(true);
-            if (idToken == null || idToken.isEmpty) {
-              if (mounted) setState(() => _error = 'OTP verified but token missing');
-              return;
-            }
-            final err = await ref.read(authStateProvider.notifier).loginWithFirebaseOtp(
-              firebaseIdToken: idToken,
-              roleHint: widget.roleHint,
-            );
-            if (!mounted) return;
-            if (err != null) setState(() => _error = err);
-          } catch (e) {
-            if (mounted) setState(() => _error = e.toString());
-          }
-        },
-        verificationFailed: (e) {
-          if (!mounted) return;
-          setState(() => _error = e.message ?? 'OTP verification failed');
-        },
-        codeSent: (verificationId, resendToken) {
-          if (!mounted) return;
-          setState(() {
-            _verificationId = verificationId;
-            _forceResendingToken = resendToken;
-          });
-        },
-        codeAutoRetrievalTimeout: (verificationId) {
-          if (!mounted) return;
-          setState(() => _verificationId = verificationId);
-        },
-        timeout: const Duration(seconds: 60),
-      );
+      final repo = ref.read(authRepositoryProvider);
+      final verificationId = await repo.sendLoginOtp(mobile: phone);
+      if (!mounted) return;
+      setState(() => _verificationId = verificationId);
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() => _error = extractApiErrorMessage(e, fallback: 'OTP send failed'));
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -124,16 +91,10 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     });
 
     try {
-      final credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: code);
-      final userCred = await FirebaseAuth.instance.signInWithCredential(credential);
-      final idToken = await userCred.user?.getIdToken(true);
-      if (idToken == null || idToken.isEmpty) {
-        setState(() => _error = 'Unable to get Firebase token');
-        return;
-      }
-
-      final err = await ref.read(authStateProvider.notifier).loginWithFirebaseOtp(
-        firebaseIdToken: idToken,
+      final err = await ref.read(authStateProvider.notifier).loginWithMessageCentralOtp(
+        mobile: _phoneCtrl.text.trim(),
+        verificationId: verificationId,
+        otpCode: code,
         roleHint: widget.roleHint,
         termsAccepted: _termsAccepted,
       );
@@ -142,7 +103,9 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
         setState(() => _error = err);
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() => _error = extractApiErrorMessage(e, fallback: 'OTP verification failed'));
+      }
     } finally {
       if (mounted) setState(() => _verifying = false);
     }

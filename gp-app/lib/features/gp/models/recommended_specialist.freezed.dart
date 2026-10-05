@@ -23,6 +23,8 @@ RecommendedSpecialist _$RecommendedSpecialistFromJson(
 mixin _$RecommendedSpecialist {
   int get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
+  @JsonKey(name: 'profile_photo')
+  String? get profilePhoto => throw _privateConstructorUsedError;
   String get speciality => throw _privateConstructorUsedError;
   @JsonKey(name: 'area_name')
   String get areaName => throw _privateConstructorUsedError;
@@ -40,6 +42,17 @@ mixin _$RecommendedSpecialist {
   String? get hospitalName => throw _privateConstructorUsedError;
   @JsonKey(name: 'clinic_address')
   String? get clinicAddress => throw _privateConstructorUsedError;
+  @JsonKey(name: 'clinic_timings')
+  String? get clinicTimings => throw _privateConstructorUsedError;
+  @JsonKey(name: 'hospital_visiting_hours')
+  String? get hospitalVisitingHours => throw _privateConstructorUsedError;
+  @JsonKey(name: 'show_mobile_number')
+  bool get showMobileNumber => throw _privateConstructorUsedError;
+  @JsonKey(name: 'show_whatsapp_number')
+  bool get showWhatsappNumber => throw _privateConstructorUsedError;
+  String? get mobile => throw _privateConstructorUsedError;
+  @JsonKey(name: 'whatsapp_number')
+  String? get whatsappNumber => throw _privateConstructorUsedError;
   @JsonKey(name: 'years_of_experience')
   int? get yearsOfExperience => throw _privateConstructorUsedError;
   List<String>? get languages => throw _privateConstructorUsedError;
@@ -70,6 +83,7 @@ abstract class $RecommendedSpecialistCopyWith<$Res> {
   $Res call(
       {int id,
       String name,
+      @JsonKey(name: 'profile_photo') String? profilePhoto,
       String speciality,
       @JsonKey(name: 'area_name') String areaName,
       @JsonKey(name: 'is_premium') bool isPremium,
@@ -79,6 +93,12 @@ abstract class $RecommendedSpecialistCopyWith<$Res> {
       @JsonKey(name: 'hospital_id') int? hospitalId,
       @JsonKey(name: 'hospital_name') String? hospitalName,
       @JsonKey(name: 'clinic_address') String? clinicAddress,
+      @JsonKey(name: 'clinic_timings') String? clinicTimings,
+      @JsonKey(name: 'hospital_visiting_hours') String? hospitalVisitingHours,
+      @JsonKey(name: 'show_mobile_number') bool showMobileNumber,
+      @JsonKey(name: 'show_whatsapp_number') bool showWhatsappNumber,
+      String? mobile,
+      @JsonKey(name: 'whatsapp_number') String? whatsappNumber,
       @JsonKey(name: 'years_of_experience') int? yearsOfExperience,
       List<String>? languages,
       @JsonKey(name: 'consultation_flags')
@@ -106,6 +126,7 @@ class _$RecommendedSpecialistCopyWithImpl<$Res,
   $Res call({
     Object? id = null,
     Object? name = null,
+    Object? profilePhoto = freezed,
     Object? speciality = null,
     Object? areaName = null,
     Object? isPremium = null,
@@ -115,6 +136,12 @@ class _$RecommendedSpecialistCopyWithImpl<$Res,
     Object? hospitalId = freezed,
     Object? hospitalName = freezed,
     Object? clinicAddress = freezed,
+    Object? clinicTimings = freezed,
+    Object? hospitalVisitingHours = freezed,
+    Object? showMobileNumber = null,
+    Object? showWhatsappNumber = null,
+    Object? mobile = freezed,
+    Object? whatsappNumber = freezed,
     Object? yearsOfExperience = freezed,
     Object? languages = freezed,
     Object? consultationFlags = freezed,
@@ -131,6 +158,10 @@ class _$RecommendedSpecialistCopyWithImpl<$Res,
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
+      profilePhoto: freezed == profilePhoto
+          ? _value.profilePhoto
+          : profilePhoto // ignore: cast_nullable_to_non_nullable
+              as String?,
       speciality: null == speciality
           ? _value.speciality
           : speciality // ignore: cast_nullable_to_non_nullable
@@ -166,6 +197,30 @@ class _$RecommendedSpecialistCopyWithImpl<$Res,
       clinicAddress: freezed == clinicAddress
           ? _value.clinicAddress
           : clinicAddress // ignore: cast_nullable_to_non_nullable
+              as String?,
+      clinicTimings: freezed == clinicTimings
+          ? _value.clinicTimings
+          : clinicTimings // ignore: cast_nullable_to_non_nullable
+              as String?,
+      hospitalVisitingHours: freezed == hospitalVisitingHours
+          ? _value.hospitalVisitingHours
+          : hospitalVisitingHours // ignore: cast_nullable_to_non_nullable
+              as String?,
+      showMobileNumber: null == showMobileNumber
+          ? _value.showMobileNumber
+          : showMobileNumber // ignore: cast_nullable_to_non_nullable
+              as bool,
+      showWhatsappNumber: null == showWhatsappNumber
+          ? _value.showWhatsappNumber
+          : showWhatsappNumber // ignore: cast_nullable_to_non_nullable
+              as bool,
+      mobile: freezed == mobile
+          ? _value.mobile
+          : mobile // ignore: cast_nullable_to_non_nullable
+              as String?,
+      whatsappNumber: freezed == whatsappNumber
+          ? _value.whatsappNumber
+          : whatsappNumber // ignore: cast_nullable_to_non_nullable
               as String?,
       yearsOfExperience: freezed == yearsOfExperience
           ? _value.yearsOfExperience
@@ -207,6 +262,7 @@ abstract class _$$RecommendedSpecialistImplCopyWith<$Res>
   $Res call(
       {int id,
       String name,
+      @JsonKey(name: 'profile_photo') String? profilePhoto,
       String speciality,
       @JsonKey(name: 'area_name') String areaName,
       @JsonKey(name: 'is_premium') bool isPremium,
@@ -216,6 +272,12 @@ abstract class _$$RecommendedSpecialistImplCopyWith<$Res>
       @JsonKey(name: 'hospital_id') int? hospitalId,
       @JsonKey(name: 'hospital_name') String? hospitalName,
       @JsonKey(name: 'clinic_address') String? clinicAddress,
+      @JsonKey(name: 'clinic_timings') String? clinicTimings,
+      @JsonKey(name: 'hospital_visiting_hours') String? hospitalVisitingHours,
+      @JsonKey(name: 'show_mobile_number') bool showMobileNumber,
+      @JsonKey(name: 'show_whatsapp_number') bool showWhatsappNumber,
+      String? mobile,
+      @JsonKey(name: 'whatsapp_number') String? whatsappNumber,
       @JsonKey(name: 'years_of_experience') int? yearsOfExperience,
       List<String>? languages,
       @JsonKey(name: 'consultation_flags')
@@ -241,6 +303,7 @@ class __$$RecommendedSpecialistImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? name = null,
+    Object? profilePhoto = freezed,
     Object? speciality = null,
     Object? areaName = null,
     Object? isPremium = null,
@@ -250,6 +313,12 @@ class __$$RecommendedSpecialistImplCopyWithImpl<$Res>
     Object? hospitalId = freezed,
     Object? hospitalName = freezed,
     Object? clinicAddress = freezed,
+    Object? clinicTimings = freezed,
+    Object? hospitalVisitingHours = freezed,
+    Object? showMobileNumber = null,
+    Object? showWhatsappNumber = null,
+    Object? mobile = freezed,
+    Object? whatsappNumber = freezed,
     Object? yearsOfExperience = freezed,
     Object? languages = freezed,
     Object? consultationFlags = freezed,
@@ -266,6 +335,10 @@ class __$$RecommendedSpecialistImplCopyWithImpl<$Res>
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
+      profilePhoto: freezed == profilePhoto
+          ? _value.profilePhoto
+          : profilePhoto // ignore: cast_nullable_to_non_nullable
+              as String?,
       speciality: null == speciality
           ? _value.speciality
           : speciality // ignore: cast_nullable_to_non_nullable
@@ -302,6 +375,30 @@ class __$$RecommendedSpecialistImplCopyWithImpl<$Res>
           ? _value.clinicAddress
           : clinicAddress // ignore: cast_nullable_to_non_nullable
               as String?,
+      clinicTimings: freezed == clinicTimings
+          ? _value.clinicTimings
+          : clinicTimings // ignore: cast_nullable_to_non_nullable
+              as String?,
+      hospitalVisitingHours: freezed == hospitalVisitingHours
+          ? _value.hospitalVisitingHours
+          : hospitalVisitingHours // ignore: cast_nullable_to_non_nullable
+              as String?,
+      showMobileNumber: null == showMobileNumber
+          ? _value.showMobileNumber
+          : showMobileNumber // ignore: cast_nullable_to_non_nullable
+              as bool,
+      showWhatsappNumber: null == showWhatsappNumber
+          ? _value.showWhatsappNumber
+          : showWhatsappNumber // ignore: cast_nullable_to_non_nullable
+              as bool,
+      mobile: freezed == mobile
+          ? _value.mobile
+          : mobile // ignore: cast_nullable_to_non_nullable
+              as String?,
+      whatsappNumber: freezed == whatsappNumber
+          ? _value.whatsappNumber
+          : whatsappNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
       yearsOfExperience: freezed == yearsOfExperience
           ? _value.yearsOfExperience
           : yearsOfExperience // ignore: cast_nullable_to_non_nullable
@@ -336,6 +433,7 @@ class _$RecommendedSpecialistImpl implements _RecommendedSpecialist {
   const _$RecommendedSpecialistImpl(
       {required this.id,
       required this.name,
+      @JsonKey(name: 'profile_photo') this.profilePhoto,
       required this.speciality,
       @JsonKey(name: 'area_name') required this.areaName,
       @JsonKey(name: 'is_premium') this.isPremium = false,
@@ -345,6 +443,12 @@ class _$RecommendedSpecialistImpl implements _RecommendedSpecialist {
       @JsonKey(name: 'hospital_id') this.hospitalId,
       @JsonKey(name: 'hospital_name') this.hospitalName,
       @JsonKey(name: 'clinic_address') this.clinicAddress,
+      @JsonKey(name: 'clinic_timings') this.clinicTimings,
+      @JsonKey(name: 'hospital_visiting_hours') this.hospitalVisitingHours,
+      @JsonKey(name: 'show_mobile_number') this.showMobileNumber = true,
+      @JsonKey(name: 'show_whatsapp_number') this.showWhatsappNumber = true,
+      this.mobile,
+      @JsonKey(name: 'whatsapp_number') this.whatsappNumber,
       @JsonKey(name: 'years_of_experience') this.yearsOfExperience,
       final List<String>? languages,
       @JsonKey(name: 'consultation_flags')
@@ -362,6 +466,9 @@ class _$RecommendedSpecialistImpl implements _RecommendedSpecialist {
   final int id;
   @override
   final String name;
+  @override
+  @JsonKey(name: 'profile_photo')
+  final String? profilePhoto;
   @override
   final String speciality;
   @override
@@ -388,6 +495,23 @@ class _$RecommendedSpecialistImpl implements _RecommendedSpecialist {
   @override
   @JsonKey(name: 'clinic_address')
   final String? clinicAddress;
+  @override
+  @JsonKey(name: 'clinic_timings')
+  final String? clinicTimings;
+  @override
+  @JsonKey(name: 'hospital_visiting_hours')
+  final String? hospitalVisitingHours;
+  @override
+  @JsonKey(name: 'show_mobile_number')
+  final bool showMobileNumber;
+  @override
+  @JsonKey(name: 'show_whatsapp_number')
+  final bool showWhatsappNumber;
+  @override
+  final String? mobile;
+  @override
+  @JsonKey(name: 'whatsapp_number')
+  final String? whatsappNumber;
   @override
   @JsonKey(name: 'years_of_experience')
   final int? yearsOfExperience;
@@ -423,7 +547,7 @@ class _$RecommendedSpecialistImpl implements _RecommendedSpecialist {
 
   @override
   String toString() {
-    return 'RecommendedSpecialist(id: $id, name: $name, speciality: $speciality, areaName: $areaName, isPremium: $isPremium, matchType: $matchType, locationId: $locationId, categoryCode: $categoryCode, hospitalId: $hospitalId, hospitalName: $hospitalName, clinicAddress: $clinicAddress, yearsOfExperience: $yearsOfExperience, languages: $languages, consultationFlags: $consultationFlags, isSuperSpecialist: $isSuperSpecialist, department: $department, role: $role)';
+    return 'RecommendedSpecialist(id: $id, name: $name, profilePhoto: $profilePhoto, speciality: $speciality, areaName: $areaName, isPremium: $isPremium, matchType: $matchType, locationId: $locationId, categoryCode: $categoryCode, hospitalId: $hospitalId, hospitalName: $hospitalName, clinicAddress: $clinicAddress, clinicTimings: $clinicTimings, hospitalVisitingHours: $hospitalVisitingHours, showMobileNumber: $showMobileNumber, showWhatsappNumber: $showWhatsappNumber, mobile: $mobile, whatsappNumber: $whatsappNumber, yearsOfExperience: $yearsOfExperience, languages: $languages, consultationFlags: $consultationFlags, isSuperSpecialist: $isSuperSpecialist, department: $department, role: $role)';
   }
 
   @override
@@ -433,6 +557,8 @@ class _$RecommendedSpecialistImpl implements _RecommendedSpecialist {
             other is _$RecommendedSpecialistImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
+            (identical(other.profilePhoto, profilePhoto) ||
+                other.profilePhoto == profilePhoto) &&
             (identical(other.speciality, speciality) ||
                 other.speciality == speciality) &&
             (identical(other.areaName, areaName) ||
@@ -451,6 +577,17 @@ class _$RecommendedSpecialistImpl implements _RecommendedSpecialist {
                 other.hospitalName == hospitalName) &&
             (identical(other.clinicAddress, clinicAddress) ||
                 other.clinicAddress == clinicAddress) &&
+            (identical(other.clinicTimings, clinicTimings) ||
+                other.clinicTimings == clinicTimings) &&
+            (identical(other.hospitalVisitingHours, hospitalVisitingHours) ||
+                other.hospitalVisitingHours == hospitalVisitingHours) &&
+            (identical(other.showMobileNumber, showMobileNumber) ||
+                other.showMobileNumber == showMobileNumber) &&
+            (identical(other.showWhatsappNumber, showWhatsappNumber) ||
+                other.showWhatsappNumber == showWhatsappNumber) &&
+            (identical(other.mobile, mobile) || other.mobile == mobile) &&
+            (identical(other.whatsappNumber, whatsappNumber) ||
+                other.whatsappNumber == whatsappNumber) &&
             (identical(other.yearsOfExperience, yearsOfExperience) ||
                 other.yearsOfExperience == yearsOfExperience) &&
             const DeepCollectionEquality()
@@ -466,25 +603,33 @@ class _$RecommendedSpecialistImpl implements _RecommendedSpecialist {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      name,
-      speciality,
-      areaName,
-      isPremium,
-      matchType,
-      locationId,
-      categoryCode,
-      hospitalId,
-      hospitalName,
-      clinicAddress,
-      yearsOfExperience,
-      const DeepCollectionEquality().hash(_languages),
-      const DeepCollectionEquality().hash(_consultationFlags),
-      isSuperSpecialist,
-      department,
-      role);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        name,
+        profilePhoto,
+        speciality,
+        areaName,
+        isPremium,
+        matchType,
+        locationId,
+        categoryCode,
+        hospitalId,
+        hospitalName,
+        clinicAddress,
+        clinicTimings,
+        hospitalVisitingHours,
+        showMobileNumber,
+        showWhatsappNumber,
+        mobile,
+        whatsappNumber,
+        yearsOfExperience,
+        const DeepCollectionEquality().hash(_languages),
+        const DeepCollectionEquality().hash(_consultationFlags),
+        isSuperSpecialist,
+        department,
+        role
+      ]);
 
   /// Create a copy of RecommendedSpecialist
   /// with the given fields replaced by the non-null parameter values.
@@ -507,6 +652,7 @@ abstract class _RecommendedSpecialist implements RecommendedSpecialist {
   const factory _RecommendedSpecialist(
       {required final int id,
       required final String name,
+      @JsonKey(name: 'profile_photo') final String? profilePhoto,
       required final String speciality,
       @JsonKey(name: 'area_name') required final String areaName,
       @JsonKey(name: 'is_premium') final bool isPremium,
@@ -516,6 +662,13 @@ abstract class _RecommendedSpecialist implements RecommendedSpecialist {
       @JsonKey(name: 'hospital_id') final int? hospitalId,
       @JsonKey(name: 'hospital_name') final String? hospitalName,
       @JsonKey(name: 'clinic_address') final String? clinicAddress,
+      @JsonKey(name: 'clinic_timings') final String? clinicTimings,
+      @JsonKey(name: 'hospital_visiting_hours')
+      final String? hospitalVisitingHours,
+      @JsonKey(name: 'show_mobile_number') final bool showMobileNumber,
+      @JsonKey(name: 'show_whatsapp_number') final bool showWhatsappNumber,
+      final String? mobile,
+      @JsonKey(name: 'whatsapp_number') final String? whatsappNumber,
       @JsonKey(name: 'years_of_experience') final int? yearsOfExperience,
       final List<String>? languages,
       @JsonKey(name: 'consultation_flags')
@@ -531,6 +684,9 @@ abstract class _RecommendedSpecialist implements RecommendedSpecialist {
   int get id;
   @override
   String get name;
+  @override
+  @JsonKey(name: 'profile_photo')
+  String? get profilePhoto;
   @override
   String get speciality;
   @override
@@ -557,6 +713,23 @@ abstract class _RecommendedSpecialist implements RecommendedSpecialist {
   @override
   @JsonKey(name: 'clinic_address')
   String? get clinicAddress;
+  @override
+  @JsonKey(name: 'clinic_timings')
+  String? get clinicTimings;
+  @override
+  @JsonKey(name: 'hospital_visiting_hours')
+  String? get hospitalVisitingHours;
+  @override
+  @JsonKey(name: 'show_mobile_number')
+  bool get showMobileNumber;
+  @override
+  @JsonKey(name: 'show_whatsapp_number')
+  bool get showWhatsappNumber;
+  @override
+  String? get mobile;
+  @override
+  @JsonKey(name: 'whatsapp_number')
+  String? get whatsappNumber;
   @override
   @JsonKey(name: 'years_of_experience')
   int? get yearsOfExperience;

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:gp_app/features/auth/data/auth_repository.dart';
 import 'package:gp_app/features/auth/models/user.dart';
 import 'package:gp_app/features/auth/state/auth_state.dart';
@@ -82,10 +81,22 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<String?> loginWithFirebaseOtp({required String firebaseIdToken, required String roleHint, bool termsAccepted = false}) async {
+  Future<String?> loginWithMessageCentralOtp({
+    required String mobile,
+    required String verificationId,
+    required String otpCode,
+    required String roleHint,
+    bool termsAccepted = false,
+  }) async {
     state = const AuthState.loading();
     try {
-      final res = await _repo.loginWithOtp(firebaseIdToken: firebaseIdToken, roleHint: roleHint, termsAccepted: termsAccepted);
+      final res = await _repo.loginWithOtp(
+        mobile: mobile,
+        verificationId: verificationId,
+        otpCode: otpCode,
+        roleHint: roleHint,
+        termsAccepted: termsAccepted,
+      );
       state = AuthState.authenticated(res.user);
 
       final userRole = res.user.role;
@@ -95,10 +106,6 @@ class AuthController extends StateNotifier<AuthState> {
       } else if (userRole == 'specialist') {
         _ref.read(selectedRoleProvider.notifier).state = AppRole.specialist;
       }
-
-      try {
-        await FirebaseAuth.instance.signOut();
-      } catch (_) {}
 
       _setupFCM();
       return null;
@@ -148,6 +155,13 @@ class AuthController extends StateNotifier<AuthState> {
     final s = state;
     if (s is Authenticated) {
       state = AuthState.authenticated(u);
+    }
+  }
+
+  void updateGpStatus(String status) {
+    final s = state;
+    if (s is Authenticated && s.user.role == 'gp') {
+      state = AuthState.authenticated(s.user.copyWith(gpStatus: status));
     }
   }
 }

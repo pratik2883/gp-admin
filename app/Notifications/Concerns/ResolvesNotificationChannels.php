@@ -39,7 +39,7 @@ trait ResolvesNotificationChannels
     {
         return [
             'mail' => 'notifications',
-            'database' => 'notifications',
+            'database' => 'sync',
             TwilioSmsChannel::class => 'notifications',
             FcmChannel::class => 'notifications',
             TwilioWhatsAppChannel::class => 'notifications',

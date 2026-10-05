@@ -1,6 +1,8 @@
 Terms & Conditions
 Last Updated: June 5, 2026
 
+**Important Notice:** Specialist Connect PRO is a referral coordination and communication platform. It does not facilitate, or permit referral commissions, kickbacks, percentage-based payments, or any form of “cut practice” in connection with patient referrals.
+
 These Terms & Conditions (“Terms”) govern your access to and use of the Specialist Connect Pro website, mobile application, and related services. By using Specialist Connect Pro, you agree to these Terms. If you do not agree, please do not use the platform. Terms are the main document for usage rules, restrictions, account controls, disclaimers, and future subscription/payment clauses.
 
 1. About the Platform

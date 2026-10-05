@@ -28,7 +28,7 @@ _$ReferralImpl _$$ReferralImplFromJson(Map<String, dynamic> json) =>
       priority: json['priority'] as String?,
       patient_name: json['patient_name'] as String?,
       patient_mobile: json['patient_mobile'] as String?,
-      patient_age: (json['patient_age'] as num?)?.toInt(),
+      patient_age: (_readPatientAge(json, 'patient_age') as num?)?.toInt(),
       patient_gender: json['patient_gender'] as String?,
       notes: json['case_summary'] as String?,
       created_at: json['created_at'] == null

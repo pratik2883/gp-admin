@@ -18,6 +18,40 @@ Route::get('/landing-assets/app_logo.png', function () {
     ]);
 });
 
+Route::get('/storage/{path}', function (string $path) {
+    $cleanPath = ltrim(str_replace(['..', "\0"], '', $path), '/');
+
+    $fullPath = storage_path('app/public/' . $cleanPath);
+
+    if (! is_file($fullPath)) {
+        $fullPath = public_path('storage/' . $cleanPath);
+    }
+
+    if (! is_file($fullPath)) {
+        $fullPath = public_path($cleanPath);
+    }
+
+    if (! is_file($fullPath)) {
+        abort(404);
+    }
+
+    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+    $mime = match ($ext) {
+        'webp' => 'image/webp',
+        'png' => 'image/png',
+        'jpg', 'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'svg' => 'image/svg+xml',
+        'pdf' => 'application/pdf',
+        default => (mime_content_type($fullPath) ?: 'application/octet-stream'),
+    };
+
+    return response()->file($fullPath, [
+        'Content-Type' => $mime,
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('path', '.*');
+
 $stripLovable = function (string $html): string {
     $html = preg_replace('/<aside\\b[^>]*\\bid=["\\\']lovable-badge["\\\'][\\s\\S]*?<\\/aside>/i', '', $html) ?? $html;
     $html = preg_replace('/<script\\b[^>]*>(?:(?!<\\/script>)[\\s\\S])*lovable-badge(?:(?!<\\/script>)[\\s\\S])*<\\/script>/i', '', $html) ?? $html;

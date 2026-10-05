@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gp_app/app/providers.dart';
+import 'package:gp_app/core/http/dio_client.dart';
 import 'package:gp_app/features/auth/state/auth_state.dart';
 import 'package:gp_app/ui/styles.dart';
 import 'package:gp_app/ui/widgets/app_card.dart';
@@ -13,7 +13,6 @@ import 'package:gp_app/ui/widgets/primary_button.dart';
 
 class OtpFlowData {
   final String verificationId;
-  final int? resendToken;
   final String phoneNumber;
   final String title;
   final String roleHint;
@@ -21,7 +20,6 @@ class OtpFlowData {
 
   const OtpFlowData({
     required this.verificationId,
-    this.resendToken,
     required this.phoneNumber,
     required this.title,
     required this.roleHint,
@@ -40,6 +38,7 @@ class OtpVerifyPage extends ConsumerStatefulWidget {
 
 class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
   final _codeCtrl = TextEditingController();
+  late String _verificationId = widget.data.verificationId;
   bool _verifying = false;
   bool _resending = false;
   String? _error;
@@ -86,19 +85,10 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
     });
 
     try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: widget.data.verificationId,
-        smsCode: code,
-      );
-      final userCred = await FirebaseAuth.instance.signInWithCredential(credential);
-      final idToken = await userCred.user?.getIdToken(true);
-      if (idToken == null || idToken.isEmpty) {
-        setState(() => _error = 'Unable to get Firebase token');
-        return;
-      }
-
-      final err = await ref.read(authStateProvider.notifier).loginWithFirebaseOtp(
-        firebaseIdToken: idToken,
+      final err = await ref.read(authStateProvider.notifier).loginWithMessageCentralOtp(
+        mobile: widget.data.phoneNumber,
+        verificationId: _verificationId,
+        otpCode: code,
         roleHint: widget.data.roleHint,
         termsAccepted: widget.data.termsAccepted,
       );
@@ -107,7 +97,9 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
         setState(() => _error = err);
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() => _error = extractApiErrorMessage(e, fallback: 'OTP verification failed'));
+      }
     } finally {
       if (mounted) setState(() => _verifying = false);
     }
@@ -120,33 +112,18 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
     });
 
     try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: widget.data.phoneNumber,
-        forceResendingToken: widget.data.resendToken ?? 0,
-        verificationCompleted: (_) {},
-        verificationFailed: (e) {
-          if (!mounted) return;
-          setState(() => _error = e.message ?? 'Resend failed');
-        },
-        codeSent: (newVerificationId, newResendToken) {
-          if (!mounted) return;
-          _startResendCooldown();
-          context.pop();
-          final prefix = widget.data.roleHint == 'specialist' ? 'sp' : 'gp';
-          context.push('/$prefix/otp-verify', extra: OtpFlowData(
-            verificationId: newVerificationId,
-            resendToken: newResendToken as int?,
-            phoneNumber: widget.data.phoneNumber,
-            title: widget.data.title,
-            roleHint: widget.data.roleHint,
-            termsAccepted: widget.data.termsAccepted,
-          ));
-        },
-        codeAutoRetrievalTimeout: (_) {},
-        timeout: const Duration(seconds: 60),
-      );
+      final repo = ref.read(authRepositoryProvider);
+      final newVerificationId = await repo.sendLoginOtp(mobile: widget.data.phoneNumber);
+      if (!mounted) return;
+      setState(() {
+        _verificationId = newVerificationId;
+        _resendCooldown = 0;
+      });
+      _startResendCooldown();
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() => _error = extractApiErrorMessage(e, fallback: 'Resend failed'));
+      }
     } finally {
       if (mounted) setState(() => _resending = false);
     }
