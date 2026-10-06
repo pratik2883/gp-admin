@@ -153,14 +153,14 @@ class SpecialistProfileController extends Controller
 
         // profile photo upload (multipart file)
         if ($request->hasFile('profile_photo')) {
-            if ($specialist->profile_photo_path) {
-                Storage::disk('public')->delete($specialist->profile_photo_path);
-            }
-            $path = $request->file('profile_photo')
-                ->store('specialists/'.$user->id, 'public');
-            $specialist->profile_photo_path = $path;
+            $file = $request->file('profile_photo');
+            $specialist->deleteProfilePhotoFiles();
+            $specialist->profile_photo_path = $specialist->storeProfilePhoto(
+                (string) file_get_contents($file->getRealPath()),
+                $file->getClientOriginalExtension() ?: 'jpg'
+            );
         } elseif (! empty($data['profile_photo_base64'])) {
-            // profile photo upload (base64 — saves directly to public dir)
+            // profile photo upload (base64 — used by the mobile apps)
             $raw = $data['profile_photo_base64'];
             $mime = $data['profile_photo_mime'] ?? 'image/jpeg';
             if (str_starts_with($raw, 'data:')) {
@@ -181,17 +181,8 @@ class SpecialistProfileController extends Controller
                     'image/webp' => 'webp',
                     default => 'jpg',
                 };
-                $filename = 'profile_'.time().'.'.$ext;
-                $publicDir = public_path('specialists/'.$user->id);
-                if (! is_dir($publicDir)) {
-                    mkdir($publicDir, 0755, true);
-                }
-                file_put_contents($publicDir.'/'.$filename, $decoded);
-                $storedPath = 'specialists/'.$user->id.'/'.$filename;
-                if ($specialist->profile_photo_path) {
-                    Storage::disk('public')->delete($specialist->profile_photo_path);
-                }
-                $specialist->profile_photo_path = $storedPath;
+                $specialist->deleteProfilePhotoFiles();
+                $specialist->profile_photo_path = $specialist->storeProfilePhoto($decoded, $ext);
             }
         }
 
@@ -366,9 +357,6 @@ class SpecialistProfileController extends Controller
         $additionalIds = $specialist->additionalSpecialties?->pluck('id')->values()->all() ?? [];
         $additionalLabels = $specialist->additionalSpecialties?->map(fn ($s) => $s->plain_label ?: $s->name)->values()->all() ?? [];
 
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $publicDisk */
-        $publicDisk = Storage::disk('public');
-
         return [
             'id' => $specialist->id,
             'full_name' => $user->name,
@@ -413,15 +401,13 @@ class SpecialistProfileController extends Controller
                     ->map(function ($p) {
                         if (! $p) return null;
                         if (is_file(public_path($p))) return url($p);
-                        return Storage::disk('public')->url($p);
+                        return url('storage/'.$p);
                     })
                     ->filter()
                     ->values()
                     ->all()
                 : [],
-            'profile_photo' => $specialist->profile_photo_path
-                ? (is_file(public_path($specialist->profile_photo_path)) ? url($specialist->profile_photo_path) : $publicDisk->url($specialist->profile_photo_path))
-                : null,
+            'profile_photo' => $specialist->profilePhotoUrl(),
         ];
     }
 }

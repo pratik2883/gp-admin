@@ -222,9 +222,7 @@ class GpReferralController extends Controller
             return [
                 'id' => $specialist->id,
                 'name' => $specialist->user?->name,
-                'profile_photo' => $specialist->profile_photo_path
-                    ? (is_file(public_path($specialist->profile_photo_path)) ? url($specialist->profile_photo_path) : Storage::disk('public')->url($specialist->profile_photo_path))
-                    : null,
+                'profile_photo' => $specialist->profilePhotoUrl(),
                 'speciality' => $specialtyLabel,
                 'area_name' => $specialist->location?->name,
                 'hospital_name' => $specialist->hospital_name ?: $primaryHospital?->name,

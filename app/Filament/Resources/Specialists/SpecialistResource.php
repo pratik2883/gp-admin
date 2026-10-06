@@ -20,11 +20,13 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -284,7 +286,11 @@ class SpecialistResource extends Resource
             ->components([
                 TextEntry::make('user_id')
                     ->numeric(),
-                TextEntry::make('profile_photo_path')
+                ImageEntry::make('profile_photo_path')
+                    ->label('Profile Photo')
+                    ->circular()
+                    ->imageSize(72)
+                    ->getStateUsing(fn (?Specialist $record) => $record?->profilePhotoUrl())
                     ->placeholder('-'),
                 TextEntry::make('whatsapp_number')
                     ->label('Whatsapp number')
@@ -340,6 +346,11 @@ class SpecialistResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('profile_photo_path')
+                    ->label('Photo')
+                    ->circular()
+                    ->imageSize(40)
+                    ->getStateUsing(fn (Specialist $record) => $record->profilePhotoUrl()),
                 TextColumn::make('user.name')
                     ->label('Name')
                     ->searchable()

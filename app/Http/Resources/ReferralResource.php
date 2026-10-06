@@ -19,9 +19,7 @@ class ReferralResource extends JsonResource
             $specialistDetails = [
                 'id' => $specialist->id,
                 'name' => $specialist->user?->name,
-                'profile_photo' => $specialist->profile_photo_path
-                    ? (is_file(public_path($specialist->profile_photo_path)) ? url($specialist->profile_photo_path) : Storage::disk('public')->url($specialist->profile_photo_path))
-                    : null,
+                'profile_photo' => $specialist->profilePhotoUrl(),
                 'speciality' => $specialist->specialty?->plain_label
                     ?? $specialist->specialty?->name
                     ?? $specialist->primary_specialization,

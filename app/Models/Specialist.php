@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class Specialist extends Model
 {
@@ -97,6 +99,91 @@ class Specialist extends Model
     public function referrals(): HasMany
     {
         return $this->hasMany(Referral::class);
+    }
+
+    /**
+     * Publicly reachable URL for the stored profile photo.
+     *
+     * Profile photos are written to the "public" disk (storage/app/public,
+     * exposed through the public/storage symlink), but photos uploaded by
+     * older builds live directly in the public web root. Both are resolved
+     * here so the admin panel and the mobile apps always receive a URL that
+     * actually points at a file. Returns null when no photo file exists, so
+     * clients fall back to their initials placeholder instead of a broken
+     * image.
+     */
+    public function profilePhotoUrl(): ?string
+    {
+        $path = $this->profile_photo_path;
+
+        if (blank($path)) {
+            return null;
+        }
+
+        if (is_file(public_path($path))) {
+            return url($path);
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            // Built from the request host rather than APP_URL so the URL stays
+            // correct regardless of how the app is deployed behind a proxy.
+            return url('storage/'.$path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Store new profile photo bytes and return the path to persist.
+     *
+     * Falls back to the public web root when the "public" disk is not
+     * writable, so an upload never silently records a path with no file
+     * behind it (which is what made photos disappear after upload).
+     */
+    public function storeProfilePhoto(string $contents, string $extension = 'jpg'): string
+    {
+        $extension = ltrim(strtolower($extension), '.*');
+
+        if (! in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            $extension = 'jpg';
+        }
+
+        $path = 'specialists/'.$this->user_id.'/profile_'.time().'_'.random_int(1000, 9999).'.'.$extension;
+
+        if (Storage::disk('public')->put($path, $contents) !== false) {
+            return $path;
+        }
+
+        $target = public_path($path);
+        $directory = dirname($target);
+
+        if (! is_dir($directory) && ! @mkdir($directory, 0755, true) && ! is_dir($directory)) {
+            throw new RuntimeException('Unable to create directory for specialist profile photo.');
+        }
+
+        if (@file_put_contents($target, $contents) === false) {
+            throw new RuntimeException('Unable to store specialist profile photo.');
+        }
+
+        return $path;
+    }
+
+    /**
+     * Remove the current profile photo from every location it may live in.
+     */
+    public function deleteProfilePhotoFiles(): void
+    {
+        $path = $this->profile_photo_path;
+
+        if (blank($path)) {
+            return;
+        }
+
+        if (is_file(public_path($path))) {
+            @unlink(public_path($path));
+        }
+
+        Storage::disk('public')->delete($path);
     }
 
     protected static function booted(): void

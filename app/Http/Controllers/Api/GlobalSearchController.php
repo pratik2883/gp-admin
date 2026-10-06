@@ -78,8 +78,8 @@ class GlobalSearchController extends Controller
                         'whatsapp_number' => ($sp->show_whatsapp_number ?? true) ? $sp->whatsapp_number : null,
                         'years_of_experience' => $sp->years_of_experience,
                         'is_premium' => (bool) $sp->is_premium,
-                        'photo_url' => $sp->profile_photo_path ? (is_file(public_path($sp->profile_photo_path)) ? url($sp->profile_photo_path) : Storage::disk('public')->url($sp->profile_photo_path)) : null,
-                        'profile_photo' => $sp->profile_photo_path ? (is_file(public_path($sp->profile_photo_path)) ? url($sp->profile_photo_path) : Storage::disk('public')->url($sp->profile_photo_path)) : null,
+                        'photo_url' => $sp->profilePhotoUrl(),
+                        'profile_photo' => $sp->profilePhotoUrl(),
                         'entity_type' => 'specialist',
                     ];
                 })->values()->toArray();

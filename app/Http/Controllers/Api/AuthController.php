@@ -372,11 +372,12 @@ class AuthController extends Controller
                 $specialist->videos = $data['videos'];
             }
             if ($request->hasFile('profile_photo')) {
-                if ($specialist->profile_photo_path) {
-                    Storage::disk('public')->delete($specialist->profile_photo_path);
-                }
-                $specialist->profile_photo_path = $request->file('profile_photo')
-                    ->store('specialists/'.$user->id, 'public');
+                $file = $request->file('profile_photo');
+                $specialist->deleteProfilePhotoFiles();
+                $specialist->profile_photo_path = $specialist->storeProfilePhoto(
+                    (string) file_get_contents($file->getRealPath()),
+                    $file->getClientOriginalExtension() ?: 'jpg'
+                );
             } elseif (! empty($data['profile_photo_base64'])) {
                 $raw = $data['profile_photo_base64'];
                 $mime = $data['profile_photo_mime'] ?? 'image/jpeg';
@@ -398,17 +399,8 @@ class AuthController extends Controller
                         'image/webp' => 'webp',
                         default => 'jpg',
                     };
-                    $filename = 'profile_'.time().'.'.$ext;
-                    $publicDir = public_path('specialists/'.$user->id);
-                    if (! is_dir($publicDir)) {
-                        mkdir($publicDir, 0755, true);
-                    }
-                    file_put_contents($publicDir.'/'.$filename, $decoded);
-                    $storedPath = 'specialists/'.$user->id.'/'.$filename;
-                    if ($specialist->profile_photo_path) {
-                        Storage::disk('public')->delete($specialist->profile_photo_path);
-                    }
-                    $specialist->profile_photo_path = $storedPath;
+                    $specialist->deleteProfilePhotoFiles();
+                    $specialist->profile_photo_path = $specialist->storeProfilePhoto($decoded, $ext);
                 }
             }
             if ($settings->allow_profile_certificates_for_specialists && $request->hasFile('certificates')) {
