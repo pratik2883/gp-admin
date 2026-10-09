@@ -51,9 +51,11 @@ class MrController extends Controller
             ->count();
 
         // Expiring subscriptions in next 7 days
+        // M3-20: `user_subscriptions` has no `expires_at` column — the expiry column
+        // is `ends_at`. This 500'd the whole dashboard with SQLSTATE 42S22.
         $sevenDaysLater = Carbon::now()->addDays(7);
         $expiringSubscriptionsCount = UserSubscription::where('status', 'active')
-            ->whereBetween('expires_at', [Carbon::now(), $sevenDaysLater])
+            ->whereBetween('ends_at', [Carbon::now(), $sevenDaysLater])
             ->count();
 
         return response()->json([
@@ -282,13 +284,53 @@ class MrController extends Controller
     public function expiringSubscriptions(Request $request)
     {
         $sevenDaysLater = Carbon::now()->addDays(7);
-        $subscriptions = UserSubscription::with(['user', 'plan'])
+        $perPage = min(50, max(1, (int) $request->query('per_page', 20)));
+
+        // Two independent bugs lived here, the second masked by the first:
+        //   1. M3-20 -- `expires_at` does not exist; the column is `ends_at`.
+        //   2. `with(['user', 'plan'])` referenced an undefined relation. The model
+        //      defines `subscriptionPlan()`, so even with the column fixed this
+        //      threw RelationNotFoundException.
+        $paginator = UserSubscription::with(['user', 'subscriptionPlan'])
             ->where('status', 'active')
-            ->whereBetween('expires_at', [Carbon::now(), $sevenDaysLater])
-            ->get();
+            ->whereBetween('ends_at', [Carbon::now(), $sevenDaysLater])
+            ->orderBy('ends_at')
+            ->paginate($perPage);
+
+        // Explicit shape instead of leaking Eloquent relation keys: the MR app reads
+        // `plan` and `expires_at`, and `with(['subscriptionPlan'])` would have
+        // serialised as `subscription_plan`. Also keeps the response bounded.
+        $items = collect($paginator->items())->map(static function (UserSubscription $subscription): array {
+            return [
+                'id' => $subscription->id,
+                'status' => $subscription->status,
+                'starts_at' => $subscription->starts_at,
+                'ends_at' => $subscription->ends_at,
+                'expires_at' => $subscription->ends_at?->toDateString(),
+                'plan_name' => $subscription->plan_name_snapshot,
+                'price' => $subscription->price_snapshot,
+                'plan' => [
+                    'id' => $subscription->subscriptionPlan?->id,
+                    'name' => $subscription->subscriptionPlan?->name,
+                    'price' => $subscription->subscriptionPlan?->price,
+                ],
+                'user' => [
+                    'id' => $subscription->user?->id,
+                    'name' => $subscription->user?->name,
+                    'mobile' => $subscription->user?->mobile,
+                    'email' => $subscription->user?->email,
+                ],
+            ];
+        })->values();
 
         return response()->json([
-            'subscriptions' => $subscriptions,
+            'subscriptions' => $items,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
         ]);
     }
 

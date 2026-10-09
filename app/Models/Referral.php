@@ -26,6 +26,7 @@ class Referral extends Model
         'status',
         'accepted_at',
         'consulted_at',
+        'ipd_at',
         'closed_at',
     ];
 
@@ -33,6 +34,7 @@ class Referral extends Model
         'patient_age' => 'integer',
         'accepted_at' => 'datetime',
         'consulted_at' => 'datetime',
+        'ipd_at' => 'datetime',
         'closed_at' => 'datetime',
     ];
 
@@ -62,6 +64,7 @@ class Referral extends Model
             'sent' => $this->created_at,
             'accepted' => $this->accepted_at,
             'consulted' => $this->consulted_at,
+            'ipd' => $this->ipd_at,
             'closed' => $this->closed_at,
         ];
     }

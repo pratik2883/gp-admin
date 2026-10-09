@@ -14,7 +14,10 @@ use App\Services\RazorpayService;
 use App\Services\SubscriptionService;
 use App\Settings\GeneralSettings;
 use App\Settings\OtpSettings;
+use App\Support\AuthPayloadCache;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -262,7 +265,7 @@ class AuthController extends Controller
         $token = $user->createToken('mobile-app')->plainTextToken;
 
         return response()->json([
-            'user' => $this->userPayload($user->loadMissing(['gp', 'specialist'])),
+            'user' => $this->userPayload($user),
             'token' => $token,
         ], 201);
     }
@@ -477,7 +480,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Registered successfully',
-            'user' => $this->userPayload($user->loadMissing(['gp', 'specialist'])),
+            'user' => $this->userPayload($user),
             'token' => $token,
             'token_type' => 'Bearer',
             'payment' => $paymentPayload,
@@ -521,7 +524,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()->json([
-            'user' => $this->userPayload($request->user()->loadMissing(['gp', 'specialist'])),
+            'user' => $this->cachedUserPayload((int) $request->user()->getKey()),
         ]);
     }
 
@@ -546,20 +549,139 @@ class AuthController extends Controller
 
     private function userPayload(User $user): array
     {
+        return $this->buildUserPayload((int) $user->getKey());
+    }
+
+    /**
+     * Memoised payload for the hot `/api/auth/me` read.
+     *
+     * Cache *tags* are intentionally not used: the configured store (`file`) does
+     * not support taggable keys, so invalidation is driven by model events on the
+     * rows this payload aggregates (see AppServiceProvider).
+     */
+    private function cachedUserPayload(int $userId): array
+    {
+        $ttl = (int) config('auth.payload_cache_ttl', 60);
+
+        if ($ttl <= 0) {
+            return $this->buildUserPayload($userId);
+        }
+
+        return Cache::remember(
+            AuthPayloadCache::key($userId),
+            now()->addSeconds($ttl),
+            fn (): array => $this->buildUserPayload($userId)
+        );
+    }
+
+    /**
+     * Build the user payload from a single joined SELECT.
+     *
+     * Replaces the previous implementation, which issued a separate query for the
+     * user row, the GP id, the GP status, the specialist id, the diagnostic centre
+     * id, the latest subscription and its latest transaction.
+     */
+    private function buildUserPayload(int $userId): array
+    {
+        $row = DB::selectOne(<<<'SQL'
+            select
+                u.id as id,
+                u.name as name,
+                u.email as email,
+                u.mobile as mobile,
+                u.role as role,
+                u.role_subtype as role_subtype,
+                u.terms_accepted_at as terms_accepted_at,
+                u.notification_consent_granted_at as notification_consent_granted_at,
+                -- gps.user_id / specialists.user_id are not unique at the DB level,
+                -- so these are scalar subqueries: they cannot multiply rows and pick
+                -- the same "first row" the previous `hasOne()->value()` call did.
+                (select g.id from gps g where g.user_id = u.id order by g.id limit 1) as gp_id,
+                (select g.status from gps g where g.user_id = u.id order by g.id limit 1) as gp_status,
+                (select s.id from specialists s where s.user_id = u.id order by s.id limit 1) as specialist_id,
+                dc.id as diagnostic_center_id,
+                us.id as sub_id,
+                us.subscription_plan_id as sub_plan_id,
+                us.plan_name_snapshot as sub_plan_name,
+                us.category_snapshot as sub_category,
+                us.plan_family_snapshot as sub_plan_family,
+                us.bed_slab_snapshot as sub_bed_slab,
+                us.duration_months_snapshot as sub_duration_months,
+                us.price_snapshot as sub_price,
+                us.currency_snapshot as sub_currency,
+                us.status as sub_status,
+                us.payment_status as sub_payment_status,
+                us.starts_at as sub_starts_at,
+                us.ends_at as sub_ends_at,
+                us.trial_ends_at as sub_trial_ends_at,
+                (
+                    select st.transaction_uuid
+                    from subscription_transactions st
+                    where st.user_subscription_id = us.id
+                    order by st.id desc
+                    limit 1
+                ) as sub_transaction_uuid
+            from users u
+            left join diagnostic_centers dc on dc.user_id = u.id
+            left join user_subscriptions us on us.id = (
+                select max(us2.id) from user_subscriptions us2 where us2.user_id = u.id
+            )
+            where u.id = ?
+            SQL, [$userId]);
+
+        if ($row === null) {
+            return [];
+        }
+
         return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'mobile' => $user->mobile,
-            'role' => $user->role,
-            'role_subtype' => $user->role_subtype,
-            'gp_id' => $user->gp()->value('id'),
-            'gp_status' => $user->gp()->value('status'),
-            'specialist_id' => $user->specialist()->value('id'),
-            'diagnostic_center_id' => $user->diagnosticCenter()->value('id'),
-            'subscription' => app(SubscriptionService::class)->latestSummaryFor($user),
-            'terms_accepted' => $user->terms_accepted_at !== null,
-            'notification_consent' => $user->notification_consent_granted_at !== null,
+            'id' => (int) $row->id,
+            'name' => $row->name,
+            'email' => $row->email,
+            'mobile' => $row->mobile,
+            'role' => $row->role,
+            'role_subtype' => $row->role_subtype,
+            'gp_id' => $row->gp_id === null ? null : (int) $row->gp_id,
+            'gp_status' => $row->gp_status,
+            'specialist_id' => $row->specialist_id === null ? null : (int) $row->specialist_id,
+            'diagnostic_center_id' => $row->diagnostic_center_id === null ? null : (int) $row->diagnostic_center_id,
+            'subscription' => $this->subscriptionPayload($row),
+            'terms_accepted' => $row->terms_accepted_at !== null,
+            'notification_consent' => $row->notification_consent_granted_at !== null,
+        ];
+    }
+
+    /**
+     * Mirrors SubscriptionService::latestSummaryFor() key-for-key and value-for-value.
+     */
+    private function subscriptionPayload(object $row): ?array
+    {
+        if ($row->sub_id === null) {
+            return null;
+        }
+
+        $timezone = (string) config('app.timezone');
+
+        $startsAt = $row->sub_starts_at !== null ? Carbon::parse($row->sub_starts_at, $timezone) : null;
+        $endsAt = $row->sub_ends_at !== null ? Carbon::parse($row->sub_ends_at, $timezone) : null;
+        $trialEndsAt = $row->sub_trial_ends_at !== null ? Carbon::parse($row->sub_trial_ends_at, $timezone) : null;
+
+        return [
+            'id' => (int) $row->sub_id,
+            'plan_id' => $row->sub_plan_id === null ? null : (int) $row->sub_plan_id,
+            'plan_name' => $row->sub_plan_name,
+            'category' => $row->sub_category,
+            'plan_family' => $row->sub_plan_family,
+            'bed_slab' => $row->sub_bed_slab,
+            'duration_months' => (int) $row->sub_duration_months,
+            'price' => (float) $row->sub_price,
+            'currency' => $row->sub_currency,
+            'status' => $row->sub_status,
+            'payment_status' => $row->sub_payment_status,
+            'starts_at' => $startsAt?->toIso8601String(),
+            'ends_at' => $endsAt?->toIso8601String(),
+            'trial_ends_at' => $trialEndsAt?->toIso8601String(),
+            'is_active' => $row->sub_status === 'active' && ($endsAt === null || $endsAt->isFuture()),
+            'latest_transaction_uuid' => $row->sub_transaction_uuid,
         ];
     }
 }

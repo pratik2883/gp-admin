@@ -51,6 +51,7 @@ class ReferralResource extends JsonResource
             'referral_type' => $this->referral_type ?? 'specialist',
             'status' => $this->status,
             'appointment_type' => $this->appointment_type,
+            'is_ipd' => strtolower((string) $this->appointment_type) === 'ipd' || strtolower((string) $this->status) === 'ipd',
             'priority' => $this->priority ?? 'routine',
             'department' => $this->department,
             'patient_name' => $this->patient_name,

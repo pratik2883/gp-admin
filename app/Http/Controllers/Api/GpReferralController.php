@@ -19,6 +19,7 @@ use App\Settings\WorkflowSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class GpReferralController extends Controller
@@ -466,6 +467,31 @@ class GpReferralController extends Controller
         return ReferralResource::collection($referrals);
     }
 
+    /**
+     * M3-01: derive the human-readable lead code from the row's auto-increment id.
+     *
+     * MAX(id) + 1 is not safe for this: two concurrent creates compute the same
+     * code (1062 on lead_code_unique) and deleting the newest row makes every later
+     * insert collide with an existing code forever. The id is unique by definition,
+     * and legacy rows whose code disagrees with their id are handled by the suffix.
+     * Must be called inside the surrounding transaction, right after the insert that
+     * wrote the temporary ULID placeholder.
+     */
+    private function assignLeadCode(Referral|DiagnosticReferral $referral, string $prefix): string
+    {
+        $base = $prefix.'-'.str_pad((string) $referral->id, 4, '0', STR_PAD_LEFT);
+        $code = $base;
+        $suffix = 0;
+
+        while ($referral->newQuery()->where('lead_code', $code)->exists()) {
+            $code = $base.'-'.(++$suffix);
+        }
+
+        $referral->forceFill(['lead_code' => $code])->saveQuietly();
+
+        return $code;
+    }
+
     // POST /api/gp/referrals
     public function store(Request $request)
     {
@@ -563,41 +589,52 @@ class GpReferralController extends Controller
                 }
             }
 
-            $maxId = DiagnosticReferral::max('id') ?? 0;
-            $leadCode = 'DSR-'.str_pad((string) ($maxId + 1), 4, '0', STR_PAD_LEFT);
+            // M3-01
+            // The referral, its lead code, its service links and its file rows are one
+            // atomic unit: a failure part-way through can no longer leave a committed
+            // referral that the client never saw (which caused duplicate referrals on
+            // retry). Attempts is left at 1 on purpose -- UploadedFile::store() moves
+            // the temp file, so a deadlock retry would fail on the moved file anyway.
+            $diagnosticReferral = DB::transaction(function () use ($request, $data, $gp, $centerId, $serviceIds) {
+                $referral = DiagnosticReferral::create([
+                    'lead_code' => (string) Str::ulid(),
+                    'gp_id' => $gp->id,
+                    'diagnostic_center_id' => $centerId,
+                    'patient_name' => $data['patient_name'],
+                    'patient_mobile' => $data['patient_mobile'] ?? null,
+                    'patient_age' => $data['patient_age'] ?? null,
+                    'patient_gender' => $data['patient_gender'] ?? null,
+                    'case_summary' => $data['case_summary'],
+                    'appointment_type' => $data['appointment_type'] ?? 'opd',
+                    'priority' => $data['priority'] ?? 'routine',
+                    'status' => 'sent',
+                ]);
 
-            $diagnosticReferral = DiagnosticReferral::create([
-                'lead_code' => $leadCode,
-                'gp_id' => $gp->id,
-                'diagnostic_center_id' => $centerId,
-                'patient_name' => $data['patient_name'],
-                'patient_mobile' => $data['patient_mobile'] ?? null,
-                'patient_age' => $data['patient_age'] ?? null,
-                'patient_gender' => $data['patient_gender'] ?? null,
-                'case_summary' => $data['case_summary'],
-                'appointment_type' => $data['appointment_type'] ?? 'opd',
-                'priority' => $data['priority'] ?? 'routine',
-                'status' => 'sent',
-            ]);
+                $this->assignLeadCode($referral, 'DSR');
 
-            $diagnosticReferral->services()->sync($serviceIds);
+                $referral->services()->sync($serviceIds);
 
-            $uploads = $request->file('reports') ?? $request->file('attachments');
-            if (is_array($uploads) && count($uploads) > 0) {
-                foreach ($uploads as $file) {
-                    $path = $file->store('diagnostic-referrals/'.$diagnosticReferral->id, 'public');
+                $uploads = $request->file('reports') ?? $request->file('attachments');
+                if (is_array($uploads) && count($uploads) > 0) {
+                    foreach ($uploads as $file) {
+                        $path = $file->store('diagnostic-referrals/'.$referral->id, 'public');
 
-                    $diagnosticReferral->files()->create([
-                        'original_name' => $file->getClientOriginalName(),
-                        'file_path' => $path,
-                        'mime_type' => $file->getClientMimeType(),
-                        'size' => $file->getSize(),
-                    ]);
+                        $referral->files()->create([
+                            'original_name' => $file->getClientOriginalName(),
+                            'file_path' => $path,
+                            'mime_type' => $file->getClientMimeType(),
+                            'size' => $file->getSize(),
+                        ]);
+                    }
                 }
-            }
+
+                return $referral;
+            });
 
             $diagnosticReferral->load(['center', 'services', 'files']);
 
+            // Dispatched only after commit: the queued channel jobs must never
+            // unserialize a referral that the worker connection cannot yet see.
             $centerUser = $diagnosticReferral->center?->user;
             if ($centerUser) {
                 $centerUser->notify(new DiagnosticReferralCreatedNotification($diagnosticReferral));
@@ -665,39 +702,43 @@ class GpReferralController extends Controller
                 }
             }
 
-            $maxId = Referral::max('id') ?? 0;
-            $leadCode = 'HR-'.str_pad((string) ($maxId + 1), 4, '0', STR_PAD_LEFT);
+            // M3-01: atomic create + lead code assignment (see assignLeadCode()).
+            $referral = DB::transaction(function () use ($request, $data, $gp) {
+                $referral = Referral::create([
+                    'lead_code' => (string) Str::ulid(),
+                    'gp_id' => $gp->id,
+                    'specialist_id' => null,
+                    'hospital_id' => $data['hospital_id'],
+                    'referral_type' => 'hospital',
+                    'department' => $data['department'],
+                    'patient_name' => $data['patient_name'],
+                    'patient_mobile' => $data['patient_mobile'] ?? null,
+                    'patient_age' => $data['patient_age'] ?? null,
+                    'patient_gender' => $data['patient_gender'] ?? null,
+                    'case_summary' => $data['case_summary'],
+                    'appointment_type' => $data['appointment_type'],
+                    'priority' => $data['priority'] ?? 'routine',
+                    'status' => 'sent',
+                ]);
 
-            $referral = Referral::create([
-                'lead_code' => $leadCode,
-                'gp_id' => $gp->id,
-                'specialist_id' => null,
-                'hospital_id' => $data['hospital_id'],
-                'referral_type' => 'hospital',
-                'department' => $data['department'],
-                'patient_name' => $data['patient_name'],
-                'patient_mobile' => $data['patient_mobile'] ?? null,
-                'patient_age' => $data['patient_age'] ?? null,
-                'patient_gender' => $data['patient_gender'] ?? null,
-                'case_summary' => $data['case_summary'],
-                'appointment_type' => $data['appointment_type'],
-                'priority' => $data['priority'] ?? 'routine',
-                'status' => 'sent',
-            ]);
+                $this->assignLeadCode($referral, 'HR');
 
-            $uploads = $request->file('reports') ?? $request->file('attachments');
-            if (is_array($uploads) && count($uploads) > 0) {
-                foreach ($uploads as $file) {
-                    $path = $file->store('referrals/'.$referral->id, 'public');
+                $uploads = $request->file('reports') ?? $request->file('attachments');
+                if (is_array($uploads) && count($uploads) > 0) {
+                    foreach ($uploads as $file) {
+                        $path = $file->store('referrals/'.$referral->id, 'public');
 
-                    $referral->files()->create([
-                        'original_name' => $file->getClientOriginalName(),
-                        'file_path' => $path,
-                        'mime_type' => $file->getClientMimeType(),
-                        'size' => $file->getSize(),
-                    ]);
+                        $referral->files()->create([
+                            'original_name' => $file->getClientOriginalName(),
+                            'file_path' => $path,
+                            'mime_type' => $file->getClientMimeType(),
+                            'size' => $file->getSize(),
+                        ]);
+                    }
                 }
-            }
+
+                return $referral;
+            });
 
             $referral->load(['hospital', 'files', 'gp.user']);
 
@@ -739,42 +780,49 @@ class GpReferralController extends Controller
             $data['hospital_id'] = null;
         }
 
-        // Generate lead code: SSC-0001, SSC-0002, etc.
-        $maxId = Referral::max('id') ?? 0;
-        $leadCode = 'SSC-'.str_pad((string) ($maxId + 1), 4, '0', STR_PAD_LEFT);
+        // M3-01: atomic create + lead code assignment (see assignLeadCode()).
+        // Lead codes remain SSC-0001, SSC-0002, ...
+        $referral = DB::transaction(function () use ($request, $data, $gp) {
+            $referral = Referral::create([
+                'lead_code' => (string) Str::ulid(),
+                'gp_id' => $gp->id,
+                'specialist_id' => $data['specialist_id'],
+                'hospital_id' => $data['hospital_id'] ?? null,
+                'referral_type' => 'specialist',
+                'patient_name' => $data['patient_name'],
+                'patient_mobile' => $data['patient_mobile'] ?? null,
+                'patient_age' => $data['patient_age'] ?? null,
+                'patient_gender' => $data['patient_gender'] ?? null,
+                'case_summary' => $data['case_summary'],
+                'appointment_type' => $data['appointment_type'],
+                'priority' => $data['priority'] ?? 'routine',
+                'status' => 'sent',
+            ]);
 
-        $referral = Referral::create([
-            'lead_code' => $leadCode,
-            'gp_id' => $gp->id,
-            'specialist_id' => $data['specialist_id'],
-            'hospital_id' => $data['hospital_id'] ?? null,
-            'referral_type' => 'specialist',
-            'patient_name' => $data['patient_name'],
-            'patient_mobile' => $data['patient_mobile'] ?? null,
-            'patient_age' => $data['patient_age'] ?? null,
-            'patient_gender' => $data['patient_gender'] ?? null,
-            'case_summary' => $data['case_summary'],
-            'appointment_type' => $data['appointment_type'],
-            'priority' => $data['priority'] ?? 'routine',
-            'status' => 'sent',
-        ]);
+            $this->assignLeadCode($referral, 'SSC');
 
-        // File uploads (optional)
-        $uploads = $request->file('reports') ?? $request->file('attachments');
-        if (is_array($uploads) && count($uploads) > 0) {
-            foreach ($uploads as $file) {
-                $path = $file->store('referrals/'.$referral->id, 'public');
+            // File uploads (optional)
+            $uploads = $request->file('reports') ?? $request->file('attachments');
+            if (is_array($uploads) && count($uploads) > 0) {
+                foreach ($uploads as $file) {
+                    $path = $file->store('referrals/'.$referral->id, 'public');
 
-                $referral->files()->create([
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_path' => $path,
-                    'mime_type' => $file->getClientMimeType(),
-                    'size' => $file->getSize(),
-                ]);
+                    $referral->files()->create([
+                        'original_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'mime_type' => $file->getClientMimeType(),
+                        'size' => $file->getSize(),
+                    ]);
+                }
             }
-        }
+
+            return $referral;
+        });
 
         $referral->load(['specialist.user', 'hospital', 'files']);
+
+        // Dispatched only after commit: the queued channel jobs must never
+        // unserialize a referral that the worker connection cannot yet see.
         $specialistUser = $referral->specialist?->user;
         if ($specialistUser) {
             $specialistUser->notify(new ReferralCreatedNotification($referral));

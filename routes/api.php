@@ -33,16 +33,17 @@ Route::get('/ping', function () {
 });
 
 // Public login alias (clean mobile login endpoint)
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/specialist/register', [AuthController::class, 'specialistRegister']);
-Route::post('/diagnostic/register', [DiagnosticCenterAuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:api');
+Route::post('/specialist/register', [AuthController::class, 'specialistRegister'])->middleware('throttle:api');
+Route::post('/diagnostic/register', [DiagnosticCenterAuthController::class, 'register'])->middleware('throttle:api');
 
-Route::post('/register/send-otp', [OtpAuthController::class, 'sendOtp']);
-Route::post('/register/verify-otp', [OtpAuthController::class, 'verifyOtp']);
+// OTP sends carry an extra, destination-number-keyed limiter on top of `api`.
+Route::post('/register/send-otp', [OtpAuthController::class, 'sendOtp'])->middleware(['throttle:api', 'throttle:otp']);
+Route::post('/register/verify-otp', [OtpAuthController::class, 'verifyOtp'])->middleware('throttle:api');
 
-Route::post('/admin/login', [AdminAuthController::class, 'login']);
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:api');
 
-Route::prefix('public')->group(function () {
+Route::prefix('public')->middleware('throttle:api')->group(function () {
     Route::get('locations', [MasterDataController::class, 'locations']);
     Route::get('specialties', [MasterDataController::class, 'specialties']);
     Route::get('diagnostic-service-types', [MasterDataController::class, 'diagnosticServiceTypes']);
@@ -58,10 +59,10 @@ Route::prefix('public')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
-    Route::post('send-otp', [OtpAuthController::class, 'sendLoginOtp']);
-    Route::post('login-with-otp', [AuthController::class, 'loginWithOtp']);
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:api');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:api');
+    Route::post('send-otp', [OtpAuthController::class, 'sendLoginOtp'])->middleware(['throttle:api', 'throttle:otp']);
+    Route::post('login-with-otp', [AuthController::class, 'loginWithOtp'])->middleware('throttle:api');
     Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 });
 
@@ -70,7 +71,9 @@ Route::prefix('auth')->group(function () {
 | Protected routes (Sanctum)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:sanctum')->group(function () {
+// `throttle:api` deliberately follows `auth:sanctum` so the limiter can key on
+// the authenticated user id instead of the shared client IP.
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::get('auth/me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
@@ -105,7 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('support-tickets/{ticketId}/reply', [SupportTicketController::class, 'reply']);
 
     // Global Search
-    Route::get('search', [GlobalSearchController::class, 'search']);
+    Route::get('search', [GlobalSearchController::class, 'search'])->middleware('throttle:search');
 
     // Master data
     Route::get('locations', [MasterDataController::class, 'locations']);
@@ -162,6 +165,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/referrals/{id}', [SpecialistReferralController::class, 'show']);
         Route::post('/referrals/{id}/accept', [SpecialistReferralController::class, 'accept']);
         Route::post('/referrals/{id}/consulted', [SpecialistReferralController::class, 'consult']);
+        Route::post('/referrals/{id}/ipd', [SpecialistReferralController::class, 'ipd']);
         Route::post('/referrals/{id}/close', [SpecialistReferralController::class, 'close']);
         Route::get('/leads', [SpecialistReferralController::class, 'index']);
         Route::get('/leads/{id}', [SpecialistReferralController::class, 'show']);

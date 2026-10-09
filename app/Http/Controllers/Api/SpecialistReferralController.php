@@ -8,6 +8,7 @@ use App\Models\Referral;
 use App\Models\Specialist;
 use App\Settings\WorkflowSettings;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class SpecialistReferralController extends Controller
@@ -27,7 +28,14 @@ class SpecialistReferralController extends Controller
             if ($status === 'new' || $status === 'pending') {
                 $status = 'sent';
             }
-            $query->where('status', $status);
+            if ($status === 'ipd') {
+                $query->where(function ($q) {
+                    $q->where('appointment_type', 'ipd')
+                      ->orWhere('status', 'ipd');
+                });
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         if ($q = $request->query('q')) {
@@ -76,6 +84,12 @@ class SpecialistReferralController extends Controller
         return $this->updateStatus($request, $id, 'consulted');
     }
 
+    // POST /api/specialist/referrals/{id}/ipd
+    public function ipd(Request $request, $id)
+    {
+        return $this->updateStatus($request, $id, 'ipd');
+    }
+
     // POST /api/specialist/referrals/{id}/close
     public function close(Request $request, $id)
     {
@@ -86,7 +100,7 @@ class SpecialistReferralController extends Controller
     public function status(Request $request, $id)
     {
         $data = $request->validate([
-            'status' => ['required', Rule::in(['accepted', 'consulted', 'closed', 'rejected'])],
+            'status' => ['required', Rule::in(['accepted', 'consulted', 'ipd', 'closed', 'rejected'])],
         ]);
 
         return $this->updateStatus($request, $id, $data['status']);
@@ -97,54 +111,84 @@ class SpecialistReferralController extends Controller
         $user = $request->user();
         $specialist = Specialist::where('user_id', $user->id)->firstOrFail();
 
-        /** @var Referral $referral */
-        $referral = Referral::with(['gp.user', 'specialist.user'])
-            ->where('specialist_id', $specialist->id)
-            ->where('referral_type', '!=', 'hospital')
-            ->findOrFail($id);
-
         $workflow = app(WorkflowSettings::class);
         $allowed = [];
         if ($workflow->force_strict_status_flow ?? false) {
             $allowed = [
                 'accepted' => ['sent'],
-                'rejected' => ['sent', 'accepted'],
-                'consulted' => ['accepted'],
-                'closed' => ['consulted'],
+                'rejected' => ['sent', 'accepted', 'ipd'],
+                'consulted' => ['accepted', 'ipd'],
+                'ipd' => ['sent', 'accepted', 'consulted'],
+                'closed' => ['consulted', 'ipd'],
             ];
         } else {
             $allowed = [
                 'accepted' => ['sent'],
-                'rejected' => ['sent', 'accepted'],
-                'consulted' => ['accepted'],
+                'rejected' => ['sent', 'accepted', 'ipd'],
+                'consulted' => ['accepted', 'ipd'],
+                'ipd' => ['sent', 'accepted', 'consulted'],
                 'closed' => ($workflow->allow_direct_sent_to_closed ?? false)
-                    ? ['sent', 'accepted', 'consulted']
-                    : ['accepted', 'consulted'],
+                    ? ['sent', 'accepted', 'consulted', 'ipd']
+                    : ['accepted', 'consulted', 'ipd'],
             ];
         }
 
-        if (! in_array($referral->status, $allowed[$newStatus] ?? [], true)) {
+        /** @var Referral|null $referral */
+        $referral = null;
+        $currentStatus = null;
+
+        // M3-08: hold the row lock for the whole read-check-write. Without it two
+        // concurrent taps both read the same pre-transition status, both pass the
+        // check, and the notification (and any billed SMS) fires twice.
+        DB::transaction(function () use ($id, $specialist, $newStatus, $allowed, &$referral, &$currentStatus) {
+            /** @var Referral $referral */
+            $referral = Referral::query()
+                ->where('specialist_id', $specialist->id)
+                ->where('referral_type', '!=', 'hospital')
+                ->whereKey($id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! in_array($referral->status, $allowed[$newStatus] ?? [], true)) {
+                // Nothing has been written, so the surrounding transaction commits
+                // empty and the 422 payload below is built from the locked status.
+                $currentStatus = $referral->status;
+
+                return;
+            }
+
+            $referral->status = $newStatus;
+
+            $now = now();
+            if ($newStatus === 'accepted') {
+                $referral->accepted_at = $now;
+            } elseif ($newStatus === 'consulted') {
+                $referral->consulted_at = $now;
+            } elseif ($newStatus === 'ipd') {
+                $referral->ipd_at = $now;
+            } elseif ($newStatus === 'closed') {
+                $referral->closed_at = $now;
+            }
+
+            $referral->save();
+        });
+
+        if ($currentStatus !== null) {
             return response()->json([
                 'message' => 'Invalid status transition',
-                'current_status' => $referral->status,
+                'current_status' => $currentStatus,
                 'requested_status' => $newStatus,
                 'allowed_from' => $allowed[$newStatus] ?? [],
             ], 422);
         }
 
-        $referral->status = $newStatus;
+        // M3-09: relations are loaded exactly once for the response. The old code
+        // eager-loaded them before the transition and then re-ran the identical batch
+        // here, because load() re-queries even for already loaded relations.
+        $referral->load(['gp.user', 'hospital', 'specialist.user']);
 
-        $now = now();
-        if ($newStatus === 'accepted') {
-            $referral->accepted_at = $now;
-        } elseif ($newStatus === 'consulted') {
-            $referral->consulted_at = $now;
-        } elseif ($newStatus === 'closed') {
-            $referral->closed_at = $now;
-        }
-
-        $referral->save();
-
+        // Notifications are dispatched only after the transaction has committed, so a
+        // queued channel job can never unserialize a row the worker cannot yet see.
         if ($newStatus === 'accepted') {
             $gpUser = $referral->gp?->user;
             if ($gpUser) {
@@ -160,6 +204,11 @@ class SpecialistReferralController extends Controller
             if ($gpUser) {
                 $gpUser->notify(new \App\Notifications\ReferralConsultedNotification($referral));
             }
+        } elseif ($newStatus === 'ipd') {
+            $gpUser = $referral->gp?->user;
+            if ($gpUser) {
+                $gpUser->notify(new \App\Notifications\ReferralIpdNotification($referral));
+            }
         } elseif ($newStatus === 'closed') {
             $gpUser = $referral->gp?->user;
             if ($gpUser) {
@@ -168,8 +217,6 @@ class SpecialistReferralController extends Controller
         }
 
         // option: log status history in a separate table
-
-        $referral->load(['gp.user', 'hospital', 'specialist.user']);
 
         return new ReferralResource($referral);
     }

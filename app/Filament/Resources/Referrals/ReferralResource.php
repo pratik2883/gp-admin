@@ -227,6 +227,7 @@ class ReferralResource extends Resource
                         'sent' => 'warning',
                         'accepted' => 'info',
                         'consulted' => 'success',
+                        'ipd' => 'purple',
                         'closed' => 'gray',
                         default => 'gray',
                     })
@@ -235,6 +236,7 @@ class ReferralResource extends Resource
                             'sent' => 'Sent',
                             'accepted' => 'Accepted',
                             'consulted' => 'Consulted',
+                            'ipd' => 'IPD (Admitted)',
                             'closed' => 'Closed',
                             default => $state,
                         };
@@ -367,6 +369,24 @@ class ReferralResource extends Resource
                             $gpUser->notify(new \App\Notifications\ReferralConsultedNotification($record));
                         }
                     }),
+                Action::make('markIpd')
+                    ->label('Mark as IPD')
+                    ->icon('heroicon-o-building-office')
+                    ->color('warning')
+                    ->visible(fn (Referral $record) => in_array($record->status, ['accepted', 'consulted']))
+                    ->action(function (Referral $record) {
+                        if (! in_array($record->status, ['accepted', 'consulted'], true)) {
+                            return;
+                        }
+                        $record->status = 'ipd';
+                        $record->ipd_at = now();
+                        $record->save();
+
+                        $gpUser = $record->gp?->user;
+                        if ($gpUser) {
+                            $gpUser->notify(new \App\Notifications\ReferralIpdNotification($record));
+                        }
+                    }),
                 Action::make('markClosed')
                     ->label('Mark as Closed')
                     ->icon('heroicon-o-lock-closed')
@@ -378,7 +398,7 @@ class ReferralResource extends Resource
                         }
                         $workflow = app(WorkflowSettings::class);
                         if ($workflow->force_strict_status_flow) {
-                            $allowedFrom = ['consulted'];
+                            $allowedFrom = ['consulted', 'ipd'];
                             if ($workflow->allow_direct_sent_to_closed) {
                                 $allowedFrom[] = 'sent';
                             }

@@ -116,4 +116,18 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | API User Payload Cache
+    |--------------------------------------------------------------------------
+    |
+    | /api/auth/me builds its payload from a single joined SELECT and memoises
+    | the result per user for this many seconds. Set to 0 to disable caching
+    | (the payload is then rebuilt on every request). Cached entries are
+    | invalidated by model events on the rows the payload aggregates.
+    |
+    */
+
+    'payload_cache_ttl' => (int) env('AUTH_PAYLOAD_CACHE_TTL', 60),
+
 ];

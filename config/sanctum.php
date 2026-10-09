@@ -47,7 +47,21 @@ return [
     |
     */
 
-    'expiration' => null,
+    'expiration' => 43200,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Track Last Used At
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, Sanctum issues a blocking `update personal_access_tokens
+    | set last_used_at = ?` on every authenticated request. That write contends
+    | on the token row for every concurrent request from the same device, so it
+    | is disabled here. Enable it only if you actively rely on `last_used_at`.
+    |
+    */
+
+    'last_used_at' => false,
 
     /*
     |--------------------------------------------------------------------------

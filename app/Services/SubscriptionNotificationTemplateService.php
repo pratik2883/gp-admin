@@ -91,6 +91,14 @@ class SubscriptionNotificationTemplateService
         'sms_text' => 'Referral {{lead_code}} consulted.',
         'whatsapp_text' => 'Hello {{user_name}}, referral {{lead_code}} has been consulted.',
     ],
+    'referral_ipd' => [
+        'mail_subject' => 'Patient admitted to IPD - {{lead_code}}',
+        'mail_body' => "Hello {{user_name}},\n\nYour referred patient {{patient_name}} (Lead: {{lead_code}}) has been admitted to IPD (In-Patient Department) by {{specialist_name}}.",
+        'in_app_title' => 'Patient Admitted to IPD',
+        'in_app_body' => '{{specialist_name}} admitted {{patient_name}} ({{lead_code}}) to IPD.',
+        'sms_text' => 'Patient {{patient_name}} ({{lead_code}}) admitted to IPD by {{specialist_name}}.',
+        'whatsapp_text' => 'Hello {{user_name}}, patient {{patient_name}} ({{lead_code}}) has been admitted to IPD by {{specialist_name}}.',
+    ],
     'referral_closed' => [
         'mail_subject' => 'Referral closed - {{lead_code}}',
         'mail_body' => "Hello {{user_name}},\n\nYour referral {{lead_code}} for {{patient_name}} has been closed.\nStatus: {{status}}",

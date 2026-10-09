@@ -98,6 +98,7 @@ class NotificationSettings extends Settings
             'referral_created' => ['email', 'in_app', 'push'],
             'referral_accepted' => ['email', 'in_app', 'push'],
             'referral_consulted' => ['email', 'in_app', 'push'],
+            'referral_ipd' => ['email', 'in_app', 'push'],
             'referral_closed' => ['email', 'in_app', 'push'],
             'referral_rejected' => ['email', 'in_app', 'push'],
             'diagnostic_referral_created' => ['email', 'in_app', 'push'],

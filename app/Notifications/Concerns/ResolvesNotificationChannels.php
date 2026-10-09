@@ -39,7 +39,9 @@ trait ResolvesNotificationChannels
     {
         return [
             'mail' => 'notifications',
-            'database' => 'sync',
+            // M3-14: 'sync' is a queue *name* here, not the sync driver, so in-app
+            // database notifications were published to a queue no worker listens on.
+            'database' => 'notifications',
             TwilioSmsChannel::class => 'notifications',
             FcmChannel::class => 'notifications',
             TwilioWhatsAppChannel::class => 'notifications',
