@@ -51,15 +51,24 @@ class FcmPushService
 
         $sent = 0;
         foreach ($tokens as $token) {
+            // FCM v1 has no `icon` field on `notification`. Sending one made every
+            // request fail with 400 INVALID_ARGUMENT ("Unknown name icon"). The
+            // Android icon belongs under android.notification instead.
             $message = [
                 'message' => array_filter([
                     'token' => $token,
                     'notification' => array_filter([
                         'title' => $title,
                         'body' => $body,
-                        'icon' => 'ic_stat_notification',
                     ], fn ($v) => $v !== ''),
                     'data' => $data,
+                    'android' => [
+                        'priority' => 'high',
+                        'notification' => [
+                            'icon' => 'ic_stat_notification',
+                            'channel_id' => 'gp_high_importance_channel',
+                        ],
+                    ],
                 ]),
             ];
 
@@ -111,7 +120,10 @@ class FcmPushService
             'token_prefix' => substr($token, 0, 24),
         ]);
 
-        $staleCodes = ['UNREGISTERED', 'INVALID_ARGUMENT', 'NOT_FOUND'];
+        // Only prune when FCM says the token itself is gone. INVALID_ARGUMENT is
+        // deliberately excluded: FCM also returns it for malformed payloads, and a
+        // payload bug must never wipe out every user's valid device tokens.
+        $staleCodes = ['UNREGISTERED', 'NOT_FOUND'];
         if (in_array($code, $staleCodes, true)) {
             DeviceToken::query()
                 ->where('user_id', $userId)

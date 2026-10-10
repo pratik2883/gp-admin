@@ -24,7 +24,9 @@ class Dashboard extends BaseDashboard
             \App\Filament\Widgets\LocationsTableWidget::class,
             \App\Filament\Widgets\GpSignupsWidget::class,
             \App\Filament\Widgets\ActiveSubscriptionsWidget::class,
-            \App\Filament\Widgets\RecentNotificationsWidget::class,
+            // The "Recent notifications" card was removed: Filament's header bell
+            // lists the same notifications, so the duplicate list at the bottom of
+            // the dashboard added nothing.
         ];
     }
 }
