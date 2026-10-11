@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gp_app/core/utils/initials_helper.dart';
 import 'package:gp_app/features/gp/models/recommended_specialist.dart';
 import 'package:gp_app/ui/styles.dart';
+import 'package:gp_app/ui/widgets/app_network_avatar.dart';
 
 class SpecialistSuggestionCard extends StatelessWidget {
   final RecommendedSpecialist specialist;
@@ -119,16 +120,10 @@ class SpecialistSuggestionCard extends StatelessWidget {
   Widget _avatar() {
     final photo = specialist.profilePhoto?.trim();
     if (photo != null && photo.isNotEmpty) {
-      return Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          image: DecorationImage(
-            image: NetworkImage(photo),
-            fit: BoxFit.cover,
-          ),
-        ),
+      return AppNetworkAvatar(
+        url: photo,
+        size: 42,
+        radius: 16,
       );
     }
     final initials = getInitials(specialist.name);

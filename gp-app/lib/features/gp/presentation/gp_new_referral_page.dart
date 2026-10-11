@@ -18,6 +18,7 @@ import 'package:gp_app/ui/widgets/section_header_row.dart';
 import 'package:gp_app/ui/widgets/app_segmented_control.dart';
 import 'package:gp_app/ui/widgets/app_attachment_list.dart';
 import 'package:gp_app/ui/widgets/specialist_profile_detail_modal.dart';
+import 'package:gp_app/ui/widgets/app_network_avatar.dart';
 
 enum ReferralType { specialist, diagnostic, hospital }
 
@@ -1364,10 +1365,10 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                                       child: Row(
                                         children: [
                                           if (sp['profile_photo'] != null || sp['photo_url'] != null) ...[
-                                            CircleAvatar(
-                                              radius: 12,
+                                            AppNetworkAvatar(
+                                              url: (sp['profile_photo'] ?? sp['photo_url']) as String,
+                                              size: 24,
                                               backgroundColor: AppColors.primaryBlue.withAlpha(30),
-                                              backgroundImage: NetworkImage(((sp['profile_photo'] ?? sp['photo_url']) as String).trim()),
                                             ),
                                             const SizedBox(width: 8),
                                           ],
@@ -2477,10 +2478,12 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                   ),
                   const SizedBox(height: 8),
                   Flexible(
-                    child: ListView.separated(
-                      shrinkWrap: true,
+                    child: ListView.builder(
+                      // Bounded, fixed-extent viewport: without `shrinkWrap` the
+                      // list virtualises instead of laying out every row up-front
+                      // (M4-05). `itemExtent` also makes scroll-offset maths O(1).
+                      itemExtent: 76,
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (context, i) {
                         final e = items[i];
                         final id = '${e['id']}';
@@ -2500,8 +2503,9 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
 
                         return AppCard(
                           onTap: () => Navigator.pop(context, id),
+                          margin: const EdgeInsets.only(bottom: 4),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
+                              horizontal: 14, vertical: 10),
                           color: selected
                               ? AppColors.primaryBlue.withAlpha(14)
                               : AppColors.surfaceMuted,
@@ -2516,10 +2520,10 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                           child: Row(
                             children: [
                               hasPhoto
-                                  ? CircleAvatar(
-                                      radius: 20,
+                                  ? AppNetworkAvatar(
+                                      url: photo,
+                                      size: 40,
                                       backgroundColor: AppColors.primaryBlue.withAlpha(30),
-                                      backgroundImage: NetworkImage(photo!.trim()),
                                     )
                                   : Container(
                                       width: 40,
@@ -2554,7 +2558,7 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                                             ? AppColors.primaryBlue
                                             : AppColors.textPrimary,
                                       ),
-                                      maxLines: 2,
+                                      maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     if (sub.isNotEmpty) ...[
@@ -2563,7 +2567,7 @@ class _GpNewReferralPageState extends ConsumerState<GpNewReferralPage> {
                                         sub,
                                         style: AppStyles.caption.copyWith(
                                             color: AppColors.textSecondary),
-                                        maxLines: 2,
+                                        maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ],

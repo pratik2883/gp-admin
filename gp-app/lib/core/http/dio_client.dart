@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:gp_app/core/config.dart';
 import 'package:gp_app/core/storage/secure_storage.dart';
 
@@ -33,6 +34,9 @@ class DioClient {
             baseUrl: baseUrl,
             connectTimeout: const Duration(seconds: 15),
             receiveTimeout: const Duration(seconds: 20),
+            // Multipart uploads (referral attachments, avatars) need a longer
+            // send budget than the default (M4-15).
+            sendTimeout: const Duration(seconds: 60),
             headers: {'Accept': 'application/json'},
           ),
         ) {
@@ -45,14 +49,17 @@ class DioClient {
         return handler.next(options);
       },
     ));
-    // ✅ Add terminal logging for development
-    _dio.interceptors.add(LogInterceptor(
-      requestHeader: true,
-      requestBody: true,
-      responseHeader: true,
-      responseBody: true,
-      error: true,
-    ));
+    // ✅ Terminal logging for development only. Release builds must never dump
+    // bearer tokens or patient PII into logcat (M4-19).
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
+        error: true,
+      ));
+    }
   }
 
   Dio get dio => _dio;

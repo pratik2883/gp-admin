@@ -6,6 +6,7 @@ import 'package:gp_app/app/role.dart';
 import 'package:gp_app/features/search/data/global_search_repository.dart';
 import 'package:gp_app/ui/styles.dart';
 import 'package:gp_app/ui/widgets/app_card.dart';
+import 'package:gp_app/ui/widgets/app_network_avatar.dart';
 import 'package:gp_app/ui/widgets/states.dart';
 
 class GlobalSearchModal extends ConsumerStatefulWidget {
@@ -391,16 +392,14 @@ class _GlobalSearchModalState extends ConsumerState<GlobalSearchModal> {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 24,
+              AppNetworkAvatar(
+                url: photo,
+                size: 48,
                 backgroundColor: AppColors.primaryBlue.withAlpha(30),
-                backgroundImage: (photo != null && photo.trim().isNotEmpty) ? NetworkImage(photo.trim()) : null,
-                child: (photo == null || photo.trim().isEmpty)
-                    ? Text(
-                        name.isNotEmpty ? name[0].toUpperCase() : 'D',
-                        style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 18),
-                      )
-                    : null,
+                fallback: Text(
+                  name.isNotEmpty ? name[0].toUpperCase() : 'D',
+                  style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 18),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

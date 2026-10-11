@@ -23,11 +23,13 @@ class LeadCard extends StatelessWidget {
     final gpName = lead.gp_name?.trim() ?? 'Unknown GP';
     final hospital = lead.hospital_name?.trim();
 
+    final isIpd = (lead.appointment_type ?? '').toLowerCase() == 'ipd' || status.toLowerCase() == 'ipd';
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppStyles.radiusCard,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isIpd ? const Color(0xFF8B5CF6).withAlpha(100) : AppColors.border),
         boxShadow: AppStyles.cardShadow,
       ),
       child: AppPressable(
@@ -44,17 +46,48 @@ class LeadCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withAlpha(18),
+                  color: isIpd ? const Color(0xFF8B5CF6).withAlpha(20) : AppColors.primaryBlue.withAlpha(18),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(Icons.person_pin_rounded, color: AppColors.primaryBlue.withAlpha(220)),
+                child: Icon(
+                  isIpd ? Icons.hotel_rounded : Icons.person_pin_rounded,
+                  color: isIpd ? const Color(0xFF8B5CF6) : AppColors.primaryBlue.withAlpha(220),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: AppStyles.bodyLarge, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(name, style: AppStyles.bodyLarge, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ),
+                        if (isIpd) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8B5CF6).withAlpha(24),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFF8B5CF6).withAlpha(120)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.hotel_rounded, size: 10, color: Color(0xFF8B5CF6)),
+                                SizedBox(width: 3),
+                                Text(
+                                  'IPD',
+                                  style: TextStyle(color: Color(0xFF8B5CF6), fontSize: 9, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                     const SizedBox(height: 2),
                     Text('Ref: $gpName', style: AppStyles.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
                     if (hospital != null && hospital.isNotEmpty) ...[

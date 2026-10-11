@@ -138,13 +138,15 @@ class _SpHomePageState extends ConsumerState<SpHomePage> {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: [
-                            _buildStatCard('New', 'pending', Icons.fiber_new_rounded, AppColors.secondaryTeal),
+                            _buildStatCard('New', 'pending', Icons.fiber_new_rounded, AppColors.secondaryTeal, displayValue: 'Pending'),
                             const SizedBox(width: 10),
-                            _buildStatCard('Accepted', 'accepted', Icons.check_circle_rounded, AppColors.primaryBlue),
+                            _buildStatCard('Accepted', 'accepted', Icons.check_circle_rounded, AppColors.primaryBlue, displayValue: 'Accepted'),
                             const SizedBox(width: 10),
-                            _buildStatCard('Consulted', 'consulted', Icons.medical_services_rounded, AppColors.warningYellow),
+                            _buildStatCard('IPD', 'ipd', Icons.hotel_rounded, const Color(0xFF8B5CF6), displayValue: 'In-Patient'),
                             const SizedBox(width: 10),
-                            _buildStatCard('Closed', 'closed', Icons.verified_rounded, AppColors.successGreen),
+                            _buildStatCard('Consulted', 'consulted', Icons.medical_services_rounded, AppColors.warningYellow, displayValue: 'Consulted'),
+                            const SizedBox(width: 10),
+                            _buildStatCard('Closed', 'closed', Icons.verified_rounded, AppColors.successGreen, displayValue: 'Closed'),
                           ],
                         ),
                       ),
@@ -224,12 +226,12 @@ class _SpHomePageState extends ConsumerState<SpHomePage> {
     );
   }
 
-  Widget _buildStatCard(String label, String statusKey, IconData icon, Color accent) {
+  Widget _buildStatCard(String label, String statusKey, IconData icon, Color accent, {String? displayValue}) {
     return SizedBox(
       width: 140,
       child: StatSummaryCard(
         label: label,
-        value: label == 'New' ? 'Pending' : label,
+        value: displayValue ?? (label == 'New' ? 'Pending' : label),
         icon: icon,
         accent: accent,
         onTap: () => _notifier().refresh(status: statusKey),

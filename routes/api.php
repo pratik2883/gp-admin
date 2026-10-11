@@ -215,7 +215,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     | MR (Medical Representative) routes
     |--------------------------------------------------------------
     */
-    Route::prefix('mr')->group(function () {
+    // MR endpoints are internal field-force data: an `ensure.mr` guard keeps a
+    // GP/specialist token from reading the MR dashboard or writing DCR visits.
+    Route::prefix('mr')->middleware('ensure.mr')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Api\MrController::class, 'dashboard']);
         Route::post('/attendance/check-in', [\App\Http\Controllers\Api\MrController::class, 'checkIn']);
         Route::post('/attendance/check-out', [\App\Http\Controllers\Api\MrController::class, 'checkOut']);

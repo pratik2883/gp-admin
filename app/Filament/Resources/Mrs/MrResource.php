@@ -107,7 +107,7 @@ class MrResource extends Resource
             ->columns([
                 TextColumn::make('employee_code')
                     ->label('Emp Code')
-                    ->bold()
+                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
                     ->searchable(),
                 TextColumn::make('user.name')
                     ->label('MR Name')
@@ -131,7 +131,7 @@ class MrResource extends Resource
                     ->dateTime('d M Y')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->using(function (Mr $record, array $data): Mr {
                         $user = $record->user;

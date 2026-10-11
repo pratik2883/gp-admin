@@ -5,6 +5,7 @@ import 'package:gp_app/app/providers.dart';
 import 'package:gp_app/app/role.dart';
 import 'package:gp_app/features/gp/models/recommended_specialist.dart';
 import 'package:gp_app/ui/styles.dart';
+import 'package:gp_app/ui/widgets/app_network_avatar.dart';
 
 class PromotedDoctorsSection extends ConsumerWidget {
   final VoidCallback? onSeeAllTap;
@@ -196,22 +197,18 @@ class _PromotedDoctorCardState extends ConsumerState<PromotedDoctorCard> {
           const SizedBox(height: 8),
 
           // Doctor Avatar Circle
-          CircleAvatar(
-            radius: 32,
+          AppNetworkAvatar(
+            url: sp.profilePhoto,
+            size: 64,
             backgroundColor: AppColors.primaryBlue.withAlpha(25),
-            backgroundImage: (sp.profilePhoto != null && sp.profilePhoto!.isNotEmpty)
-                ? NetworkImage(sp.profilePhoto!)
-                : null,
-            child: (sp.profilePhoto == null || sp.profilePhoto!.isEmpty)
-                ? Text(
-                    sp.name.isNotEmpty ? sp.name[0].toUpperCase() : 'D',
-                    style: const TextStyle(
-                      color: AppColors.primaryBlue,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 24,
-                    ),
-                  )
-                : null,
+            fallback: Text(
+              sp.name.isNotEmpty ? sp.name[0].toUpperCase() : 'D',
+              style: const TextStyle(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.w800,
+                fontSize: 24,
+              ),
+            ),
           ),
 
           const SizedBox(height: 8),

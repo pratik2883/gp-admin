@@ -30,6 +30,7 @@ mixin _$Lead {
   String? get patient_gender => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   String? get hospital_name => throw _privateConstructorUsedError;
+  String? get appointment_type => throw _privateConstructorUsedError;
   List<LeadAttachment> get attachments => throw _privateConstructorUsedError;
   DateTime? get created_at => throw _privateConstructorUsedError;
 
@@ -58,6 +59,7 @@ abstract class $LeadCopyWith<$Res> {
       String? patient_gender,
       String? notes,
       String? hospital_name,
+      String? appointment_type,
       List<LeadAttachment> attachments,
       DateTime? created_at});
 }
@@ -87,6 +89,7 @@ class _$LeadCopyWithImpl<$Res, $Val extends Lead>
     Object? patient_gender = freezed,
     Object? notes = freezed,
     Object? hospital_name = freezed,
+    Object? appointment_type = freezed,
     Object? attachments = null,
     Object? created_at = freezed,
   }) {
@@ -131,6 +134,10 @@ class _$LeadCopyWithImpl<$Res, $Val extends Lead>
           ? _value.hospital_name
           : hospital_name // ignore: cast_nullable_to_non_nullable
               as String?,
+      appointment_type: freezed == appointment_type
+          ? _value.appointment_type
+          : appointment_type // ignore: cast_nullable_to_non_nullable
+              as String?,
       attachments: null == attachments
           ? _value.attachments
           : attachments // ignore: cast_nullable_to_non_nullable
@@ -161,6 +168,7 @@ abstract class _$$LeadImplCopyWith<$Res> implements $LeadCopyWith<$Res> {
       String? patient_gender,
       String? notes,
       String? hospital_name,
+      String? appointment_type,
       List<LeadAttachment> attachments,
       DateTime? created_at});
 }
@@ -187,6 +195,7 @@ class __$$LeadImplCopyWithImpl<$Res>
     Object? patient_gender = freezed,
     Object? notes = freezed,
     Object? hospital_name = freezed,
+    Object? appointment_type = freezed,
     Object? attachments = null,
     Object? created_at = freezed,
   }) {
@@ -231,6 +240,10 @@ class __$$LeadImplCopyWithImpl<$Res>
           ? _value.hospital_name
           : hospital_name // ignore: cast_nullable_to_non_nullable
               as String?,
+      appointment_type: freezed == appointment_type
+          ? _value.appointment_type
+          : appointment_type // ignore: cast_nullable_to_non_nullable
+              as String?,
       attachments: null == attachments
           ? _value._attachments
           : attachments // ignore: cast_nullable_to_non_nullable
@@ -257,6 +270,7 @@ class _$LeadImpl implements _Lead {
       this.patient_gender,
       this.notes,
       this.hospital_name,
+      this.appointment_type,
       final List<LeadAttachment> attachments = const [],
       this.created_at})
       : _attachments = attachments;
@@ -284,6 +298,8 @@ class _$LeadImpl implements _Lead {
   final String? notes;
   @override
   final String? hospital_name;
+  @override
+  final String? appointment_type;
   final List<LeadAttachment> _attachments;
   @override
   @JsonKey()
@@ -298,7 +314,7 @@ class _$LeadImpl implements _Lead {
 
   @override
   String toString() {
-    return 'Lead(id: $id, lead_code: $lead_code, status: $status, gp_name: $gp_name, patient_name: $patient_name, patient_mobile: $patient_mobile, patient_age: $patient_age, patient_gender: $patient_gender, notes: $notes, hospital_name: $hospital_name, attachments: $attachments, created_at: $created_at)';
+    return 'Lead(id: $id, lead_code: $lead_code, status: $status, gp_name: $gp_name, patient_name: $patient_name, patient_mobile: $patient_mobile, patient_age: $patient_age, patient_gender: $patient_gender, notes: $notes, hospital_name: $hospital_name, appointment_type: $appointment_type, attachments: $attachments, created_at: $created_at)';
   }
 
   @override
@@ -322,6 +338,8 @@ class _$LeadImpl implements _Lead {
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.hospital_name, hospital_name) ||
                 other.hospital_name == hospital_name) &&
+            (identical(other.appointment_type, appointment_type) ||
+                other.appointment_type == appointment_type) &&
             const DeepCollectionEquality()
                 .equals(other._attachments, _attachments) &&
             (identical(other.created_at, created_at) ||
@@ -342,6 +360,7 @@ class _$LeadImpl implements _Lead {
       patient_gender,
       notes,
       hospital_name,
+      appointment_type,
       const DeepCollectionEquality().hash(_attachments),
       created_at);
 
@@ -373,6 +392,7 @@ abstract class _Lead implements Lead {
       final String? patient_gender,
       final String? notes,
       final String? hospital_name,
+      final String? appointment_type,
       final List<LeadAttachment> attachments,
       final DateTime? created_at}) = _$LeadImpl;
 
@@ -398,6 +418,8 @@ abstract class _Lead implements Lead {
   String? get notes;
   @override
   String? get hospital_name;
+  @override
+  String? get appointment_type;
   @override
   List<LeadAttachment> get attachments;
   @override

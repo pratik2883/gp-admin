@@ -16,6 +16,7 @@ class Lead with _$Lead {
     String? patient_gender,
     String? notes,
     String? hospital_name,
+    String? appointment_type,
     @Default([]) List<LeadAttachment> attachments,
     DateTime? created_at,
   }) = _Lead;

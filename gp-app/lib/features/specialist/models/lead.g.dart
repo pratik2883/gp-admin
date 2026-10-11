@@ -17,6 +17,7 @@ _$LeadImpl _$$LeadImplFromJson(Map<String, dynamic> json) => _$LeadImpl(
       patient_gender: json['patient_gender'] as String?,
       notes: json['notes'] as String?,
       hospital_name: json['hospital_name'] as String?,
+      appointment_type: json['appointment_type'] as String?,
       attachments: (json['attachments'] as List<dynamic>?)
               ?.map((e) => LeadAttachment.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -38,6 +39,7 @@ Map<String, dynamic> _$$LeadImplToJson(_$LeadImpl instance) =>
       'patient_gender': instance.patient_gender,
       'notes': instance.notes,
       'hospital_name': instance.hospital_name,
+      'appointment_type': instance.appointment_type,
       'attachments': instance.attachments,
       'created_at': instance.created_at?.toIso8601String(),
     };

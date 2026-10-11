@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gp_app/ui/styles.dart';
+import 'package:gp_app/ui/widgets/app_network_avatar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SpecialistProfileDetailModal extends StatelessWidget {
@@ -92,16 +93,14 @@ class SpecialistProfileDetailModal extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 32,
+                    AppNetworkAvatar(
+                      url: photo,
+                      size: 64,
                       backgroundColor: Colors.white.withAlpha(50),
-                      backgroundImage: (photo != null && photo.trim().isNotEmpty) ? NetworkImage(photo.trim()) : null,
-                      child: (photo == null || photo.trim().isEmpty)
-                          ? Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : 'D',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
-                            )
-                          : null,
+                      fallback: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : 'D',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+                      ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(

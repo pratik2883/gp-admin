@@ -444,6 +444,10 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
       _ => 'Specialist Profile',
     };
     final isSpecialist = subtype != RoleSubtype.hospital && subtype != RoleSubtype.diagnostic;
+    final profileImage = _buildProfileImage(
+      size: 100,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+    );
 
     return PopScope(
       canPop: false,
@@ -477,8 +481,8 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
                               CircleAvatar(
                                 radius: 50,
                                 backgroundColor: AppColors.primaryBlue.withAlpha(20),
-                                backgroundImage: _buildProfileImage(),
-                                child: _buildProfileImage() == null
+                                backgroundImage: profileImage,
+                                child: profileImage == null
                                     ? Text(
                                         _name.text.isNotEmpty ? _name.text[0].toUpperCase() : 'S',
                                         style: AppStyles.heading1.copyWith(color: AppColors.primaryBlue, fontSize: 36),
@@ -752,7 +756,10 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
     );
   }
 
-  ImageProvider? _buildProfileImage() {
+  ImageProvider? _buildProfileImage({
+    required double size,
+    required double devicePixelRatio,
+  }) {
     final file = _profilePhotoFile;
     if (file != null) {
       if (file.bytes != null && file.bytes!.isNotEmpty) {
@@ -764,7 +771,15 @@ class _SpProfilePageState extends ConsumerState<SpProfilePage> {
     }
     final url = (_profilePhotoUrl ?? '').trim();
     if (url.isNotEmpty) {
-      return NetworkImage(url);
+      // Decode at physical-pixel size so the raster cache never holds a
+      // full-resolution avatar (M4-03).
+      final extent = (size * devicePixelRatio).round();
+      return ResizeImage(
+        NetworkImage(url),
+        width: extent,
+        height: extent,
+        policy: ResizeImagePolicy.fit,
+      );
     }
     return null;
   }

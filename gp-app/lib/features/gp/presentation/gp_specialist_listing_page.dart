@@ -6,6 +6,7 @@ import 'package:gp_app/features/gp/models/recommended_specialist.dart';
 import 'package:gp_app/ui/styles.dart';
 import 'package:gp_app/ui/widgets/app_hero_header.dart';
 import 'package:gp_app/ui/widgets/app_card.dart';
+import 'package:gp_app/ui/widgets/app_network_avatar.dart';
 import 'package:gp_app/ui/widgets/rounded_search_bar.dart';
 import 'package:gp_app/ui/widgets/states.dart';
 import 'package:gp_app/ui/widgets/specialist_profile_detail_modal.dart';
@@ -301,22 +302,25 @@ class _Avatar extends StatelessWidget {
     final photo = photoUrl?.trim();
     if (photo != null && photo.isNotEmpty) {
       return Container(
-        width: 52,
-        height: 52,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: isPremium ? Border.all(color: const Color(0xFFFFD700), width: 2) : null,
-          image: DecorationImage(
-            image: NetworkImage(photo),
-            fit: BoxFit.cover,
-          ),
-          boxShadow: isPremium ? [
-            BoxShadow(
-              color: Colors.amber.withAlpha(77),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            )
-          ] : null,
+          boxShadow: isPremium
+              ? [
+                  BoxShadow(
+                    color: Colors.amber.withAlpha(77),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
+        ),
+        child: AppNetworkAvatar(
+          url: photo,
+          size: 52,
+          radius: 16,
+          border: isPremium
+              ? Border.all(color: const Color(0xFFFFD700), width: 2)
+              : null,
         ),
       );
     }

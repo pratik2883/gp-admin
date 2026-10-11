@@ -17,6 +17,8 @@ class Specialist extends Model
     protected $fillable = [
         'user_id',
         'profile_photo_path',
+        'clinic_photo_path',
+        'visiting_card_path',
         'whatsapp_number',
         'primary_specialization',
         'specialty_id',
@@ -47,6 +49,9 @@ class Specialist extends Model
         'show_mobile_number',
         'show_whatsapp_number',
         'location_id',
+        'latitude',
+        'longitude',
+        'onboarded_by_mr_id',
         'is_premium',
         'priority_order',
         'is_active',

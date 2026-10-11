@@ -12,8 +12,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Modify referrals.status from ENUM to VARCHAR(50) to support 'ipd' and future custom statuses safely
-        DB::statement("ALTER TABLE referrals MODIFY status VARCHAR(50) NOT NULL DEFAULT 'sent'");
+        // 1. Modify referrals.status from ENUM to VARCHAR(50) to support 'ipd' and
+        // future custom statuses safely. MySQL-only: SQLite has no `MODIFY
+        // COLUMN` syntax, and skipping it there keeps the sqlite test schema
+        // bootable (SQLite stores enum columns as varchar and does not enforce
+        // the enum list).
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE referrals MODIFY status VARCHAR(50) NOT NULL DEFAULT 'sent'");
+        }
 
         // 2. Add ipd_at timestamp if not exists
         if (! Schema::hasColumn('referrals', 'ipd_at')) {
@@ -34,6 +40,8 @@ return new class extends Migration
             });
         }
 
-        DB::statement("ALTER TABLE referrals MODIFY status ENUM('sent','accepted','consulted','closed') NOT NULL DEFAULT 'sent'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE referrals MODIFY status ENUM('sent','accepted','consulted','closed') NOT NULL DEFAULT 'sent'");
+        }
     }
 };

@@ -64,7 +64,7 @@ class StatSummaryCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       value,
-                      style: AppStyles.heading2.copyWith(fontSize: isCompact ? 14 : null),
+                      style: AppStyles.heading2.copyWith(fontSize: isCompact ? 12 : 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

@@ -20,6 +20,7 @@ class AppStatusChip extends StatelessWidget {
       'open' => (AppColors.warningYellow.withAlpha(28), AppColors.warningYellow, 'Open'),
       'in_progress' => (AppColors.primaryBlue.withAlpha(22), AppColors.primaryBlue, 'In Progress'),
       'accepted' => (AppColors.secondaryTeal.withAlpha(26), AppColors.secondaryTeal, 'Accepted'),
+      'ipd' || 'admitted' => (const Color(0xFF8B5CF6).withAlpha(26), const Color(0xFF8B5CF6), 'IPD'),
       'consulted' => (AppColors.primaryBlue.withAlpha(22), AppColors.primaryBlue, 'Consulted'),
       'resolved' => (AppColors.secondaryTeal.withAlpha(24), AppColors.secondaryTeal, 'Resolved'),
       'closed' || 'completed' => (AppColors.successGreen.withAlpha(26), AppColors.successGreen, 'Closed'),

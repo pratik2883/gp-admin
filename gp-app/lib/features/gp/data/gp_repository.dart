@@ -95,8 +95,9 @@ class GpRepository {
     String? q,
     int page = 1,
     int perPage = 20,
+    CancelToken? cancelToken,
   }) async {
-    final res = await _dio.get('/api/gp/referrals', queryParameters: {
+    final res = await _dio.get('/api/gp/referrals', cancelToken: cancelToken, queryParameters: {
       if (referralType != null && referralType.isNotEmpty) 'referral_type': referralType,
       if (status != null && status.isNotEmpty) 'status': status,
       if (from != null && from.isNotEmpty) 'from': from,

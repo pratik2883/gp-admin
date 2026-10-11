@@ -99,6 +99,7 @@ class _SpLeadDetailPageState extends ConsumerState<SpLeadDetailPage> {
                           _infoRow('Patient ID', l.patient_mobile ?? 'N/A'),
                           _infoRow('Referred By', l.gp_name ?? 'Unknown GP'),
                           _infoRow('Location', l.hospital_name ?? 'N/A'),
+                          _infoRow('Admission / Type', (l.appointment_type ?? 'OPD').toUpperCase()),
                         ],
                       ),
                     ),
@@ -197,10 +198,30 @@ class _SpLeadDetailPageState extends ConsumerState<SpLeadDetailPage> {
     } else if (status == 'accepted' || status == 'active') {
       return Column(
         children: [
-          PrimaryButton(
-            label: 'Mark as Consulted',
-            onPressed: () => _setStatus('consulted'),
-            color: AppColors.secondaryBlue,
+          Row(
+            children: [
+              Expanded(
+                child: PrimaryButton(
+                  label: 'Mark Consulted',
+                  onPressed: () => _setStatus('consulted'),
+                  color: AppColors.secondaryBlue,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _setStatus('ipd'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(0, 52),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  icon: const Icon(Icons.hotel_rounded, size: 18),
+                  label: const Text('Mark as IPD', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           TextButton(
@@ -209,11 +230,64 @@ class _SpLeadDetailPageState extends ConsumerState<SpLeadDetailPage> {
           ),
         ],
       );
+    } else if (status == 'ipd') {
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF8B5CF6).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.4)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.hotel_rounded, color: Color(0xFF8B5CF6), size: 24),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Patient is Admitted (IPD)',
+                    style: TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          PrimaryButton(
+            label: 'Close / Discharge Case',
+            onPressed: () => _setStatus('closed'),
+            color: AppColors.statusError,
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            onPressed: () => _setStatus('consulted'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
+            child: const Text('Mark as Consulted (OPD)'),
+          ),
+        ],
+      );
     } else if (status == 'consulted' || status == 'treated') {
-      return PrimaryButton(
-        label: 'Close Case',
-        onPressed: () => _setStatus('closed'),
-        color: AppColors.statusError,
+      return Column(
+        children: [
+          PrimaryButton(
+            label: 'Close Case',
+            onPressed: () => _setStatus('closed'),
+            color: AppColors.statusError,
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            onPressed: () => _setStatus('ipd'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            icon: const Icon(Icons.hotel_rounded, size: 18),
+            label: const Text('Admit Patient to IPD', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
       );
     } else if (status == 'closed' || status == 'completed') {
       return Container(

@@ -41,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensure.gp' => \App\Http\Middleware\EnsureGp::class,
             'ensure.specialist' => \App\Http\Middleware\EnsureSpecialist::class,
             'ensure.diagnostic' => \App\Http\Middleware\EnsureDiagnosticCenter::class,
+            'ensure.mr' => \App\Http\Middleware\EnsureMr::class,
         ]);
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {

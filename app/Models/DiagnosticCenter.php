@@ -30,6 +30,12 @@ class DiagnosticCenter extends Model
         'authorized_person_mobile',
         'authorized_person_email',
         'status',
+        'profile_photo_path',
+        'clinic_photo_path',
+        'visiting_card_path',
+        'latitude',
+        'longitude',
+        'onboarded_by_mr_id',
     ];
 
     protected $casts = [
