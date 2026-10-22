@@ -230,6 +230,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('/collaterals', [\App\Http\Controllers\Api\MrController::class, 'getCollaterals']);
         Route::post('/leaves', [\App\Http\Controllers\Api\MrController::class, 'applyLeave']);
         Route::get('/leaves', [\App\Http\Controllers\Api\MrController::class, 'getLeaves']);
+        Route::get('/assignments', [\App\Http\Controllers\Api\MrController::class, 'getAssignments']);
+        Route::patch('/assignments/{id}', [\App\Http\Controllers\Api\MrController::class, 'updateAssignment'])
+            ->whereNumber('id');
         Route::get('/calendar', [\App\Http\Controllers\Api\MrController::class, 'calendar']);
         Route::get('/profile', [\App\Http\Controllers\Api\MrController::class, 'getProfile']);
         Route::post('/change-password', [\App\Http\Controllers\Api\MrController::class, 'changePassword']);

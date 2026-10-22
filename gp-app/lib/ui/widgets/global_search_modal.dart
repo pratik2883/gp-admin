@@ -7,6 +7,7 @@ import 'package:gp_app/features/search/data/global_search_repository.dart';
 import 'package:gp_app/ui/styles.dart';
 import 'package:gp_app/ui/widgets/app_card.dart';
 import 'package:gp_app/ui/widgets/app_network_avatar.dart';
+import 'package:gp_app/ui/widgets/specialist_profile_detail_modal.dart';
 import 'package:gp_app/ui/widgets/states.dart';
 
 class GlobalSearchModal extends ConsumerStatefulWidget {
@@ -380,13 +381,7 @@ class _GlobalSearchModalState extends ConsumerState<GlobalSearchModal> {
       padding: const EdgeInsets.only(bottom: 10),
       child: AppCard(
         onTap: () {
-          Navigator.of(context).pop();
-          final role = ref.read(selectedRoleProvider);
-          if (role == AppRole.gp) {
-            context.push('/gp/referrals/new', extra: {'specialist_id': id});
-          } else {
-            context.push('/gp/specialists/$id');
-          }
+          _showSpecialistActionSheet(sp);
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -601,6 +596,146 @@ class _GlobalSearchModalState extends ConsumerState<GlobalSearchModal> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showSpecialistActionSheet(Map<String, dynamic> sp) {
+    final name = sp['name'] as String? ?? 'Specialist';
+    final speciality = sp['speciality'] as String? ?? '';
+    final area = sp['area_name'] as String? ?? '';
+    final id = sp['id'];
+    final photo = (sp['profile_photo'] as String?) ?? (sp['photo_url'] as String?);
+    final role = ref.read(selectedRoleProvider);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Row(
+                  children: [
+                    AppNetworkAvatar(
+                      url: photo,
+                      size: 44,
+                      backgroundColor: AppColors.primaryBlue.withAlpha(30),
+                      fallback: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : 'D',
+                        style: const TextStyle(
+                          color: AppColors.primaryBlue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (speciality.isNotEmpty)
+                            Text(
+                              speciality,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          if (area.isNotEmpty)
+                            Text(
+                              area,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.person_pin_rounded, color: AppColors.primaryBlue),
+                  ),
+                  title: const Text('View Profile', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Check doctor qualifications, timings & bio', style: TextStyle(fontSize: 12)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    SpecialistProfileDetailModal.show(
+                      context,
+                      specialist: sp,
+                      onReferPressed: role == AppRole.gp
+                          ? () {
+                              Navigator.of(context).pop();
+                              context.push('/gp/referrals/new', extra: {'specialist_id': id});
+                            }
+                          : null,
+                    );
+                  },
+                ),
+                if (role == AppRole.gp)
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryTeal.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.send_rounded, color: AppColors.secondaryTeal),
+                    ),
+                    title: const Text('Refer Patient', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: const Text('Create a new referral for this specialist', style: TextStyle(fontSize: 12)),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      Navigator.of(context).pop();
+                      context.push('/gp/referrals/new', extra: {'specialist_id': id});
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

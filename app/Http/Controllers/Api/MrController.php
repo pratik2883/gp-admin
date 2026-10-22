@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Collateral;
 use App\Models\DiagnosticCenter;
 use App\Models\Gp;
+use App\Models\Hospital;
 use App\Models\Mr;
+use App\Models\MrAssignment;
 use App\Models\MrAttendance;
 use App\Models\MrLeave;
 use App\Models\MrVisit;
@@ -15,6 +17,7 @@ use App\Models\Specialist;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserSubscription;
+use App\Settings\MrSettings;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,12 +32,28 @@ class MrController extends Controller
     public function dashboard(Request $request)
     {
         $user = $request->user();
-        $mr = Mr::firstOrCreate(['user_id' => $user->id], [
-            'employee_code' => 'MR-'.str_pad($user->id, 4, '0', STR_PAD_LEFT),
-            'territory_zone' => 'Mumbai & Thane',
-            'daily_visit_target' => 10,
-            'monthly_subscription_target' => 5,
-        ]);
+        $settings = app(MrSettings::class);
+
+        $mr = Mr::where('user_id', $user->id)->first();
+
+        // Targets and the auto-created profile are admin-controlled: the admin
+        // panel decides whether a missing profile is provisioned at all, and
+        // with which targets.
+        if (! $mr) {
+            if (! $settings->allow_auto_provision_profile) {
+                return response()->json([
+                    'message' => 'MR profile is not set up yet. Please contact the admin.',
+                ], 409);
+            }
+
+            $mr = Mr::create([
+                'user_id' => $user->id,
+                'employee_code' => 'MR-'.str_pad($user->id, 4, '0', STR_PAD_LEFT),
+                'territory_zone' => 'Mumbai & Thane',
+                'daily_visit_target' => $settings->default_daily_visit_target,
+                'monthly_subscription_target' => $settings->default_monthly_subscription_target,
+            ]);
+        }
 
         $today = Carbon::today()->format('Y-m-d');
         $todayVisitsCount = MrVisit::where('mr_user_id', $user->id)
@@ -45,18 +64,18 @@ class MrController extends Controller
             ->whereDate('date', $today)
             ->first();
 
-        // Non-active GPs (registered > 15 days ago, 0 referrals)
-        $fifteenDaysAgo = Carbon::now()->subDays(15);
-        $nonActiveGpsCount = Gp::where('created_at', '<=', $fifteenDaysAgo)
+        // Non-active GPs (registered longer than the admin-configured window, 0 referrals)
+        $inactiveCutoff = Carbon::now()->subDays($settings->non_active_gp_days);
+        $nonActiveGpsCount = Gp::where('created_at', '<=', $inactiveCutoff)
             ->whereDoesntHave('referrals')
             ->count();
 
         // Expiring subscriptions in next 7 days
         // M3-20: `user_subscriptions` has no `expires_at` column — the expiry column
         // is `ends_at`. This 500'd the whole dashboard with SQLSTATE 42S22.
-        $sevenDaysLater = Carbon::now()->addDays(7);
+        $expiryWindowEnd = Carbon::now()->addDays($settings->expiring_subscription_days);
         $expiringSubscriptionsCount = UserSubscription::where('status', 'active')
-            ->whereBetween('ends_at', [Carbon::now(), $sevenDaysLater])
+            ->whereBetween('ends_at', [Carbon::now(), $expiryWindowEnd])
             ->count();
 
         return response()->json([
@@ -71,6 +90,19 @@ class MrController extends Controller
                 'attendance_status' => $todayAttendance ? ($todayAttendance->check_out_at ? 'checked_out' : 'checked_in') : 'not_checked_in',
             ],
             'today_attendance' => $todayAttendance,
+            // The app used to hardcode the shift window and always show the
+            // check-in popup, so these admin switches had no effect.
+            'shift_settings' => [
+                'shift_start' => Carbon::parse($settings->shift_start)->format('h:i A'),
+                'shift_end' => Carbon::parse($settings->shift_end)->format('h:i A'),
+                'attendance_popup_enabled' => $settings->attendance_popup_enabled,
+                'selfie_required_on_check_in' => $settings->selfie_required_on_check_in,
+                'geotag_required_on_check_in' => $settings->geotag_required_on_check_in,
+                'geotag_required_on_visit' => $settings->geotag_required_on_visit,
+                'max_visits_per_day' => $settings->max_visits_per_day,
+                'allowed_onboarding_roles' => $settings->allowedOnboardingRoles(),
+                'allow_payment_link' => $settings->allow_payment_link,
+            ],
         ]);
     }
 
@@ -85,6 +117,21 @@ class MrController extends Controller
             'longitude' => 'nullable|numeric',
             'selfie' => 'nullable|image|max:5048',
         ]);
+
+        $settings = app(MrSettings::class);
+
+        if ($settings->selfie_required_on_check_in && ! $request->hasFile('selfie')) {
+            return response()->json([
+                'message' => 'A selfie is required to check in.',
+            ], 422);
+        }
+
+        if ($settings->geotag_required_on_check_in
+            && ($request->input('latitude') === null || $request->input('longitude') === null)) {
+            return response()->json([
+                'message' => 'GPS location is required to check in.',
+            ], 422);
+        }
 
         $selfiePath = null;
         if ($request->hasFile('selfie')) {
@@ -139,7 +186,8 @@ class MrController extends Controller
 
         $data = $request->validate([
             'doctor_user_id' => 'nullable|integer|exists:users,id',
-            'doctor_type' => 'required|in:gp,specialist,diagnostic_center',
+            'doctor_type' => 'required|in:gp,specialist,diagnostic_center,hospital',
+            'hospital_id' => 'nullable|integer|exists:hospitals,id',
             'doctor_name' => 'nullable|string|max:190',
             'clinic_name' => 'nullable|string|max:190',
             'visit_purpose' => 'required|string|max:100',
@@ -150,16 +198,47 @@ class MrController extends Controller
             'selfie' => 'nullable|image|max:5048',
         ]);
 
+        $settings = app(MrSettings::class);
+
+        if ($settings->geotag_required_on_visit
+            && (($data['latitude'] ?? null) === null || ($data['longitude'] ?? null) === null)) {
+            return response()->json([
+                'message' => 'GPS location is required to log a visit.',
+            ], 422);
+        }
+
+        if ($settings->max_visits_per_day > 0) {
+            $loggedToday = MrVisit::where('mr_user_id', $user->id)
+                ->whereDate('visit_date', Carbon::today())
+                ->count();
+
+            if ($loggedToday >= $settings->max_visits_per_day) {
+                return response()->json([
+                    'message' => 'Daily visit limit of '.$settings->max_visits_per_day.
+                        ' reached. Please contact the admin.',
+                ], 422);
+            }
+        }
+
         $selfiePath = null;
         if ($request->hasFile('selfie')) {
             $selfiePath = $request->file('selfie')->store('mr/visits/'.$user->id, 'public');
         }
 
+        // A hospital visit is recorded against the directory row, so the admin
+        // panel can open the real hospital instead of a free-text name.
+        $hospitalId = $data['hospital_id'] ?? null;
+        $doctorName = $data['doctor_name'] ?? null;
+        if (($data['doctor_type'] === 'hospital') && $hospitalId && ! $doctorName) {
+            $doctorName = Hospital::whereKey($hospitalId)->value('name');
+        }
+
         $visit = MrVisit::create([
             'mr_user_id' => $user->id,
             'doctor_user_id' => $data['doctor_user_id'] ?? null,
+            'hospital_id' => $hospitalId,
             'doctor_type' => $data['doctor_type'],
-            'doctor_name' => $data['doctor_name'] ?? null,
+            'doctor_name' => $doctorName,
             'clinic_name' => $data['clinic_name'] ?? null,
             'visit_date' => Carbon::today(),
             'visit_purpose' => $data['visit_purpose'],
@@ -196,8 +275,13 @@ class MrController extends Controller
     // POST /api/mr/onboard-doctor
     public function onboardDoctor(Request $request)
     {
+        $settings = app(MrSettings::class);
+        $allowedRoles = $settings->allowedOnboardingRoles();
+
         $data = $request->validate([
-            'role' => 'required|in:gp,specialist,diagnostic_center',
+            'role' => $allowedRoles === []
+                ? 'prohibited'
+                : 'required|in:'.implode(',', $allowedRoles),
             'name' => 'required|string|max:190',
             'mobile' => 'required|string|max:20|unique:users,mobile',
             'email' => 'nullable|email|max:190|unique:users,email',
@@ -209,8 +293,13 @@ class MrController extends Controller
             'address' => 'nullable|string|max:255',
             'clinic_city' => 'nullable|string|max:120',
             'clinic_pincode' => 'nullable|string|max:12',
+            'clinic_state' => 'nullable|string|max:100',
             'registration_number' => 'nullable|string|max:100',
             'council_name' => 'nullable|string|max:150',
+
+            // Hospital-only details (a hospital is a Specialist account with
+            // role_subtype=hospital plus a `hospitals` directory row).
+            'hospital_type' => 'nullable|string|max:100',
 
             // Specialist-only details
             'specialty_id' => 'nullable|integer|exists:specialties,id',
@@ -241,10 +330,11 @@ class MrController extends Controller
         // it: role=specialist with role_subtype=diagnostic_center. Writing
         // role='diagnostic_center' directly raised a data-truncation error and
         // 500'd the whole request.
-        $userRole = $role === 'diagnostic_center' ? 'specialist' : $role;
+        $userRole = in_array($role, ['diagnostic_center', 'hospital'], true) ? 'specialist' : $role;
         $roleSubtype = match ($role) {
             'diagnostic_center' => 'diagnostic_center',
             'specialist' => 'specialist',
+            'hospital' => 'hospital',
             default => null,
         };
 
@@ -275,6 +365,8 @@ class MrController extends Controller
 
         // The profile row is created in one transaction with the user so a
         // failure never leaves a login-able account with no doctor record.
+        $hospital = null;
+
         DB::transaction(function () use (
             $role,
             $data,
@@ -282,7 +374,8 @@ class MrController extends Controller
             $mrUserId,
             $profilePhotoPath,
             $clinicPhotoPath,
-            $visitingCardPath
+            $visitingCardPath,
+            &$hospital
         ) {
             if ($role === 'gp') {
                 Gp::create([
@@ -347,19 +440,73 @@ class MrController extends Controller
                     'onboarded_by_mr_id' => $mrUserId,
                     'status' => 'active',
                 ]);
+            } elseif ($role === 'hospital') {
+                $hospitalName = $data['hospital_name'] ?? $data['clinic_name'] ?? $data['name'];
+
+                $specialist = Specialist::create([
+                    'user_id' => $user->id,
+                    'hospital_name' => $hospitalName,
+                    'clinic_name' => $hospitalName,
+                    'clinic_address' => $data['address'] ?? null,
+                    'clinic_city' => $data['clinic_city'] ?? null,
+                    'clinic_pincode' => $data['clinic_pincode'] ?? null,
+                    'medical_council_registration_no' => $data['registration_number'] ?? null,
+                    'medical_council_name' => $data['council_name'] ?? null,
+                    'whatsapp_number' => $data['whatsapp_number'] ?? $data['mobile'],
+                    'bio' => $data['bio'] ?? null,
+                    'profile_photo_path' => $profilePhotoPath,
+                    'clinic_photo_path' => $clinicPhotoPath,
+                    'visiting_card_path' => $visitingCardPath,
+                    'latitude' => $data['latitude'] ?? null,
+                    'longitude' => $data['longitude'] ?? null,
+                    'onboarded_by_mr_id' => $mrUserId,
+                    'is_active' => true,
+                ]);
+
+                // The directory row is what GP referrals point at, so a
+                // field-onboarded hospital has to exist there too. It starts as
+                // `pending` until the admin verifies it.
+                $hospital = Hospital::create([
+                    'name' => $hospitalName,
+                    'hospital_type' => $data['hospital_type'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'micro_area' => $data['micro_area'] ?? null,
+                    'city' => $data['clinic_city'] ?? null,
+                    'pincode' => $data['clinic_pincode'] ?? null,
+                    'state' => $data['clinic_state'] ?? null,
+                    'country' => 'India',
+                    'contact_number' => $data['alternate_number'] ?? $data['mobile'],
+                    'email' => $data['email'] ?? null,
+                    'admin_name' => $data['authorized_person_name'] ?? $data['name'],
+                    'admin_designation' => $data['authorized_person_role'] ?? null,
+                    'admin_mobile' => $data['mobile'],
+                    'admin_email' => $data['email'] ?? null,
+                    'status' => 'pending',
+                    'onboarded_by_mr_id' => $mrUserId,
+                ]);
+
+                $hospital->specialists()->syncWithoutDetaching([
+                    $specialist->id => [
+                        'is_super_specialist' => true,
+                        'role' => 'owner',
+                    ],
+                ]);
             }
         });
 
         return response()->json([
             'message' => 'Doctor onboarded successfully!',
             'doctor_user' => $user->fresh(),
+            'hospital' => $hospital,
         ]);
     }
 
     // GET /api/mr/non-active-gps
     public function nonActiveGps(Request $request)
     {
-        $fifteenDaysAgo = Carbon::now()->subDays(15);
+        $fifteenDaysAgo = Carbon::now()->subDays(
+            app(MrSettings::class)->non_active_gp_days
+        );
         $gps = Gp::with('user')
             ->where('created_at', '<=', $fifteenDaysAgo)
             ->whereDoesntHave('referrals')
@@ -373,7 +520,9 @@ class MrController extends Controller
     // GET /api/mr/expiring-subscriptions
     public function expiringSubscriptions(Request $request)
     {
-        $sevenDaysLater = Carbon::now()->addDays(7);
+        $sevenDaysLater = Carbon::now()->addDays(
+            app(MrSettings::class)->expiring_subscription_days
+        );
         $perPage = min(50, max(1, (int) $request->query('per_page', 20)));
 
         // Two independent bugs lived here, the second masked by the first:
@@ -427,6 +576,12 @@ class MrController extends Controller
     // POST /api/mr/payment-link
     public function generatePaymentLink(Request $request)
     {
+        if (! app(MrSettings::class)->allow_payment_link) {
+            return response()->json([
+                'message' => 'Payment links are disabled by the admin.',
+            ], 403);
+        }
+
         $request->validate([
             'doctor_user_id' => 'required|exists:users,id',
             'plan_id' => 'required|exists:subscription_plans,id',
@@ -531,13 +686,21 @@ class MrController extends Controller
         $user = $request->user();
         $mr = Mr::where('user_id', $user->id)->first();
 
+        $settings = app(MrSettings::class);
+
         return response()->json([
             'user' => $user,
             'mr_profile' => $mr,
             'shift_settings' => [
-                'shift_start' => '09:30 AM',
-                'shift_end' => '06:30 PM',
-                'attendance_popup_enabled' => true,
+                'shift_start' => Carbon::parse($settings->shift_start)->format('h:i A'),
+                'shift_end' => Carbon::parse($settings->shift_end)->format('h:i A'),
+                'attendance_popup_enabled' => $settings->attendance_popup_enabled,
+                'selfie_required_on_check_in' => $settings->selfie_required_on_check_in,
+                'geotag_required_on_check_in' => $settings->geotag_required_on_check_in,
+                'geotag_required_on_visit' => $settings->geotag_required_on_visit,
+                'max_visits_per_day' => $settings->max_visits_per_day,
+                'allowed_onboarding_roles' => $settings->allowedOnboardingRoles(),
+                'allow_payment_link' => $settings->allow_payment_link,
             ],
         ]);
     }
@@ -560,5 +723,71 @@ class MrController extends Controller
         ]);
 
         return response()->json(['message' => 'Password updated successfully!']);
+    }
+
+    // GET /api/mr/assignments
+    public function getAssignments(Request $request)
+    {
+        $user = $request->user();
+        $status = $request->query('status');
+
+        $query = MrAssignment::query()
+            ->where('mr_user_id', $user->id)
+            ->with('assignable')
+            ->orderByRaw("CASE priority WHEN 'high' THEN 0 WHEN 'normal' THEN 1 ELSE 2 END")
+            ->orderByRaw('due_date IS NULL, due_date');
+
+        if (in_array($status, ['pending', 'in_progress', 'done', 'cancelled'], true)) {
+            $query->where('status', $status);
+        } elseif ($status !== 'all') {
+            // Default view is the open worklist, not the archive.
+            $query->whereIn('status', ['pending', 'in_progress']);
+        }
+
+        $items = $query->limit(100)->get()->map(static fn (MrAssignment $a): array => [
+            'id' => $a->id,
+            'title' => $a->title,
+            'purpose' => $a->purpose,
+            'priority' => $a->priority,
+            'status' => $a->status,
+            'due_date' => $a->due_date?->toDateString(),
+            'notes' => $a->notes,
+            'mr_remarks' => $a->mr_remarks,
+            'target_name' => $a->targetName(),
+            'target_type' => $a->targetType(),
+            'lead_mobile' => $a->lead_mobile,
+            'lead_city' => $a->lead_city,
+            'completed_at' => $a->completed_at,
+        ])->values();
+
+        return response()->json(['assignments' => $items]);
+    }
+
+    // PATCH /api/mr/assignments/{id}
+    public function updateAssignment(Request $request, int $id)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'status' => 'required|in:pending,in_progress,done,cancelled',
+            'remarks' => 'nullable|string|max:1000',
+        ]);
+
+        $assignment = MrAssignment::where('mr_user_id', $user->id)->find($id);
+        if (! $assignment) {
+            return response()->json(['message' => 'Assignment not found'], 404);
+        }
+
+        $assignment->status = $data['status'];
+        if (array_key_exists('remarks', $data)) {
+            $assignment->mr_remarks = $data['remarks'];
+        }
+        $assignment->completed_at = $data['status'] === 'done' ? Carbon::now() : null;
+        $assignment->save();
+
+        return response()->json([
+            'message' => 'Assignment updated',
+            'assignment' => $assignment->fresh(),
+        ]);
     }
 }

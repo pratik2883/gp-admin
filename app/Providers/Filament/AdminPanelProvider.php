@@ -47,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => $primaryColor,
             ])
             ->navigationGroups([
+                'MR Activity',
                 'User Management',
                 'Directory',
                 'Referrals',

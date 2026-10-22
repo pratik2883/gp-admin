@@ -29,6 +29,7 @@ class Hospital extends Model
         'admin_mobile',
         'admin_email',
         'status',
+        'onboarded_by_mr_id',
     ];
 
     public function specialists(): BelongsToMany
@@ -46,5 +47,11 @@ class Hospital extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    /** The MR who registered this hospital in the field. */
+    public function onboardedByMr(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'onboarded_by_mr_id');
     }
 }

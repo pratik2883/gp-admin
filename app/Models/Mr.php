@@ -35,4 +35,32 @@ class Mr extends Model
     {
         return $this->hasMany(MrLeave::class, 'mr_user_id', 'user_id');
     }
+
+    public function assignments()
+    {
+        return $this->hasMany(MrAssignment::class, 'mr_user_id', 'user_id');
+    }
+
+    /**
+     * Doctors this MR registered in the field, across every profile table.
+     */
+    public function onboardedGps()
+    {
+        return $this->hasMany(Gp::class, 'onboarded_by_mr_id', 'user_id');
+    }
+
+    public function onboardedSpecialists()
+    {
+        return $this->hasMany(Specialist::class, 'onboarded_by_mr_id', 'user_id');
+    }
+
+    public function onboardedDiagnosticCenters()
+    {
+        return $this->hasMany(DiagnosticCenter::class, 'onboarded_by_mr_id', 'user_id');
+    }
+
+    public function onboardedHospitals()
+    {
+        return $this->hasMany(Hospital::class, 'onboarded_by_mr_id', 'user_id');
+    }
 }

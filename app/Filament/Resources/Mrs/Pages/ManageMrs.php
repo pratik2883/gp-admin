@@ -26,7 +26,7 @@ class ManageMrs extends ManageRecords
                         'email' => $data['email'] ?: $data['mobile'].'@specialistconnectpro.com',
                         'password' => Hash::make($data['password'] ?? '12345678'),
                         'role' => 'mr',
-                        'status' => 'active',
+                        'status' => $data['user_status'] ?? 'active',
                     ]);
 
                     return Mr::create([

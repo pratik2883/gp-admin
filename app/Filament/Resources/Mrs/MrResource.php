@@ -69,6 +69,15 @@ class MrResource extends Resource
                         ->password()
                         ->required(fn (?Mr $record) => $record === null)
                         ->dehydrated(fn ($state) => filled($state)),
+                    Select::make('user_status')
+                        ->label('Login status')
+                        ->options([
+                            'active' => 'Active (can log in)',
+                            'blocked' => 'Blocked (login refused)',
+                        ])
+                        ->default('active')
+                        ->required()
+                        ->afterStateHydrated(fn ($component, $state, ?Mr $record) => $component->state($record?->user?->status ?? 'active')),
                 ])->columns(2),
 
             Section::make('Territory & Field Targets')
@@ -143,6 +152,9 @@ class MrResource extends Resource
                             ]);
                             if (filled($data['password'] ?? null)) {
                                 $userData['password'] = Hash::make($data['password']);
+                            }
+                            if (filled($data['user_status'] ?? null)) {
+                                $userData['status'] = $data['user_status'];
                             }
                             $user->update($userData);
                         }
