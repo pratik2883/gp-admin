@@ -47,7 +47,9 @@ return [
     |
     */
 
-    'expiration' => 43200,
+    // 7 days. Mobile clients re-authenticate through OTP, and a stolen field
+    // device token should not stay valid for a month.
+    'expiration' => 10080,
 
     /*
     |--------------------------------------------------------------------------

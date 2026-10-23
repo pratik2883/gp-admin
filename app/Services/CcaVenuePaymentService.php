@@ -20,12 +20,18 @@ class CcaVenuePaymentService
     public function paymentsEnabled(): bool
     {
         return (bool) $this->settings->enable_ccavenue_payments
-            && ($this->settings->ccavenue_mock_mode || $this->hasCredentials());
+            && ($this->isMockMode() || $this->hasCredentials());
     }
 
+    /**
+     * Same rule as the Razorpay gateway: the mock toggle only has meaning on a
+     * developer machine. On a public host it would let an anonymous visitor
+     * finalise a pending transaction through the mock callback.
+     */
     public function isMockMode(): bool
     {
-        return (bool) $this->settings->ccavenue_mock_mode;
+        return (bool) $this->settings->ccavenue_mock_mode
+            && app()->environment(['local', 'testing']);
     }
 
     public function hasCredentials(): bool

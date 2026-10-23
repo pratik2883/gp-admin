@@ -66,8 +66,25 @@ class GeneralSettings extends Settings
         return $this->max_upload_size_mb * 1024 * 1024;
     }
 
+    /**
+     * Types that are always safe to place on a web-served disk. Anything the
+     * panel adds (svg, html, php, ...) is dropped here: the list feeds the
+     * `mimes:` validation rule for patient documents, and an active type would
+     * be rendered inline from the application's own origin.
+     */
+    private const SAFE_UPLOAD_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
+
     public function allowedMimeTypes(): array
     {
-        return $this->allowed_file_types;
+        $configured = array_map(
+            static fn ($type) => strtolower(trim((string) $type)),
+            (array) $this->allowed_file_types,
+        );
+
+        $safe = array_values(array_intersect($configured, self::SAFE_UPLOAD_TYPES));
+
+        // Never hand back an empty rule: a blank `mimes:` list would disable the
+        // check entirely instead of tightening it.
+        return $safe !== [] ? $safe : self::SAFE_UPLOAD_TYPES;
     }
 }

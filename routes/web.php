@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\CcaVenuePaymentController;
+use App\Http\Controllers\Web\RazorpayPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/landing-assets/app_logo.png', function () {
@@ -18,36 +19,56 @@ Route::get('/landing-assets/app_logo.png', function () {
     ]);
 });
 
+/**
+ * Shared hosting cannot use the `public/storage` symlink, so uploads are
+ * streamed through this route instead.
+ *
+ * The previous implementation stripped `..` with a string replace, fell back to
+ * `public_path($cleanPath)` (so any file under `public/` was served), and chose
+ * the Content-Type from the extension — including `image/svg+xml`, which turns
+ * an uploaded SVG into same-origin script execution. It now resolves the final
+ * path with realpath(), refuses anything that escapes storage/app/public,
+ * refuses dotfiles, and only serves an allow-listed set of passive file types.
+ */
 Route::get('/storage/{path}', function (string $path) {
-    $cleanPath = ltrim(str_replace(['..', "\0"], '', $path), '/');
+    $base = realpath(storage_path('app/public'));
+    $relative = ltrim(str_replace('\\', '/', $path), '/');
 
-    $fullPath = storage_path('app/public/' . $cleanPath);
-
-    if (! is_file($fullPath)) {
-        $fullPath = public_path('storage/' . $cleanPath);
-    }
-
-    if (! is_file($fullPath)) {
-        $fullPath = public_path($cleanPath);
-    }
-
-    if (! is_file($fullPath)) {
+    if ($base === false || $relative === '' || str_contains($relative, "\0")) {
         abort(404);
     }
 
-    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-    $mime = match ($ext) {
-        'webp' => 'image/webp',
-        'png' => 'image/png',
+    foreach (explode('/', $relative) as $segment) {
+        if ($segment === '' || str_starts_with($segment, '.')) {
+            abort(404);
+        }
+    }
+
+    $fullPath = realpath($base.DIRECTORY_SEPARATOR.$relative);
+
+    if ($fullPath === false
+        || ! is_file($fullPath)
+        || ! str_starts_with($fullPath, $base.DIRECTORY_SEPARATOR)) {
+        abort(404);
+    }
+
+    $mime = match (strtolower(pathinfo($fullPath, PATHINFO_EXTENSION))) {
         'jpg', 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'webp' => 'image/webp',
         'gif' => 'image/gif',
-        'svg' => 'image/svg+xml',
         'pdf' => 'application/pdf',
-        default => (mime_content_type($fullPath) ?: 'application/octet-stream'),
+        default => null,
     };
+
+    if ($mime === null) {
+        abort(404);
+    }
 
     return response()->file($fullPath, [
         'Content-Type' => $mime,
+        'X-Content-Type-Options' => 'nosniff',
+        'Content-Disposition' => 'inline; filename="'.basename($fullPath).'"',
         'Cache-Control' => 'public, max-age=86400',
     ]);
 })->where('path', '.*');
@@ -272,15 +293,25 @@ Route::post('/payments/razorpay/webhook', [\App\Http\Controllers\Web\RazorpayPay
     ->name('payments.razorpay.webhook');
 Route::post('/payments/razorpay/verify', [\App\Http\Controllers\Web\RazorpayPaymentController::class, 'verifyPayment'])
     ->name('payments.razorpay.verify');
-Route::get('/payments/razorpay/mock/{transactionUuid}/{result}', [\App\Http\Controllers\Web\RazorpayPaymentController::class, 'mock'])
-    ->name('payments.razorpay.mock');
+/*
+| Mock gateway callbacks are development-only. They used to be registered on
+| every host, so a single anonymous GET carrying a transaction UUID flipped a
+| pending subscription to "paid". Registering them per environment means a
+| production build does not even contain the route.
+*/
+if (app()->environment(['local', 'testing'])) {
+    Route::get('/payments/razorpay/mock/{transactionUuid}/{result}', [RazorpayPaymentController::class, 'mock'])
+        ->name('payments.razorpay.mock');
+}
 
 Route::get('/payments/ccavenue/checkout/{transactionUuid}', [CcaVenuePaymentController::class, 'checkout'])
     ->name('payments.ccavenue.checkout');
 Route::post('/payments/ccavenue/response/{transactionUuid}', [CcaVenuePaymentController::class, 'response'])
     ->name('payments.ccavenue.response');
-Route::get('/payments/ccavenue/mock/{transactionUuid}/{result}', [CcaVenuePaymentController::class, 'mock'])
-    ->name('payments.ccavenue.mock');
+if (app()->environment(['local', 'testing'])) {
+    Route::get('/payments/ccavenue/mock/{transactionUuid}/{result}', [CcaVenuePaymentController::class, 'mock'])
+        ->name('payments.ccavenue.mock');
+}
 Route::get('/payments/ccavenue/status/{transactionUuid}', function (string $transactionUuid) {
     return redirect('/api/public/subscription-payments/'.$transactionUuid);
 })->name('payments.ccavenue.status');

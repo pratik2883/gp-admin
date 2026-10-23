@@ -126,7 +126,7 @@ class GpProfileController extends Controller
 
         $data = $request->validate([
             'current_password' => ['required', 'string'],
-            'new_password' => ['required', 'string', 'confirmed', Password::min(8)],
+            'new_password' => ['required', 'string', 'confirmed', Password::min(8)->letters()->numbers()],
         ]);
 
         if (! Hash::check($data['current_password'], (string) $user->password)) {
@@ -140,6 +140,11 @@ class GpProfileController extends Controller
 
         $user->password = $data['new_password'];
         $user->save();
+
+        // Rotate every other session so a stolen token cannot outlive the
+        // password it was issued against.
+        $currentTokenId = $request->user()->currentAccessToken()?->getKey();
+        $user->tokens()->when($currentTokenId, fn ($query) => $query->where('id', '!=', $currentTokenId))->delete();
 
         return response()->json([
             'message' => 'Password updated successfully.',

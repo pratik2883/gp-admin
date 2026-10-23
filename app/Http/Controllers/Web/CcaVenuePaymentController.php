@@ -104,6 +104,10 @@ HTML;
 
     public function mock(string $transactionUuid, string $result)
     {
+        // The mock callback finalises a transaction without any gateway proof.
+        // It must never be reachable from a public host.
+        abort_unless(app()->environment(['local', 'testing']), 404);
+
         $transaction = SubscriptionTransaction::query()
             ->with(['userSubscription.user'])
             ->where('transaction_uuid', $transactionUuid)

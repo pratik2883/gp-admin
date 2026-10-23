@@ -10,9 +10,12 @@ use App\Services\MessageCentralSmsService;
 use App\Settings\NotificationSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class OtpAuthController extends Controller
 {
+    /** Wrong codes tolerated for one destination number before the OTP is burned. */
+    private const OTP_MAX_ATTEMPTS = 5;
     public function sendOtp(Request $request)
     {
         $request->validate([
@@ -62,7 +65,7 @@ class OtpAuthController extends Controller
             $this->otpCacheKey($mobile),
             [
                 'mode' => 'local',
-                'otp' => $otp,
+                'otp' => hash('sha256', (string) $otp),
                 'name' => $request->name,
             ],
             now()->addMinutes(10)
@@ -72,7 +75,7 @@ class OtpAuthController extends Controller
             'message' => 'OTP sent successfully',
         ];
 
-        if (app()->environment(['local', 'testing'])) {
+        if ($this->canExposeOtpForDebug()) {
             $payload['otp_debug'] = $otp;
         }
 
@@ -84,10 +87,17 @@ class OtpAuthController extends Controller
         $request->validate([
             'mobile' => ['required', 'string'],
             'otp' => ['required', 'digits_between:4,6'],
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['required', 'string', Password::min(8)->letters()->numbers()],
         ]);
 
         $mobile = $this->canonicalize((string) $request->mobile);
+
+        if ($this->tooManyOtpAttempts($mobile)) {
+            return response()->json([
+                'message' => 'Too many incorrect OTP attempts. Request a new OTP.',
+            ], 429);
+        }
+
         $cached = cache()->get($this->otpCacheKey($mobile));
 
         if (! is_array($cached)) {
@@ -122,7 +132,13 @@ class OtpAuthController extends Controller
                 ], 422);
             }
         } else {
-            if ((string) ($cached['otp'] ?? '') !== (string) $request->otp) {
+            $storedOtp = (string) ($cached['otp'] ?? '');
+            $otpMatches = $storedOtp !== ''
+                && hash_equals($storedOtp, hash('sha256', (string) $request->otp));
+
+            if (! $otpMatches) {
+                $this->registerFailedOtpAttempt($mobile);
+
                 return response()->json([
                     'message' => 'Invalid or expired OTP.',
                 ], 422);
@@ -130,6 +146,7 @@ class OtpAuthController extends Controller
         }
 
         cache()->forget($this->otpCacheKey($mobile));
+        cache()->forget($this->otpAttemptKey($mobile));
 
         $user = User::firstOrNew(['mobile' => $mobile]);
         $user->name = $cached['name'] ?? ($user->name ?? 'User');
@@ -215,7 +232,7 @@ class OtpAuthController extends Controller
             $this->loginOtpCacheKey($mobile),
             [
                 'mode' => 'local',
-                'otp' => (string) $otp,
+                'otp' => hash('sha256', (string) $otp),
             ],
             now()->addMinutes(10)
         );
@@ -224,7 +241,7 @@ class OtpAuthController extends Controller
             'message' => 'OTP sent successfully',
         ];
 
-        if (app()->environment(['local', 'testing'])) {
+        if ($this->canExposeOtpForDebug()) {
             $payload['otp_debug'] = $otp;
         }
 
@@ -273,5 +290,37 @@ class OtpAuthController extends Controller
     private function loginOtpCacheKey(string $mobile): string
     {
         return 'login_otp_'.$mobile;
+    }
+
+    /**
+     * The OTP is echoed back only for local debugging, and only while the app is
+     * actually in debug mode: returning it purely on `APP_ENV` would hand full
+     * account takeover to anyone if the environment was ever mis-set.
+     */
+    private function canExposeOtpForDebug(): bool
+    {
+        return app()->environment(['local', 'testing']) && (bool) config('app.debug');
+    }
+
+    private function otpAttemptKey(string $mobile): string
+    {
+        return 'verify_otp_attempts:'.$mobile;
+    }
+
+    private function tooManyOtpAttempts(string $mobile): bool
+    {
+        return (int) cache()->get($this->otpAttemptKey($mobile), 0) >= self::OTP_MAX_ATTEMPTS;
+    }
+
+    private function registerFailedOtpAttempt(string $mobile): void
+    {
+        $key = $this->otpAttemptKey($mobile);
+        $attempts = (int) cache()->get($key, 0) + 1;
+
+        cache()->put($key, $attempts, now()->addMinutes(15));
+
+        if ($attempts >= self::OTP_MAX_ATTEMPTS) {
+            cache()->forget($this->otpCacheKey($mobile));
+        }
     }
 }

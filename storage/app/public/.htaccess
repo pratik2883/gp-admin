@@ -1,0 +1,35 @@
+# Uploaded files are served from this directory (directly, or through the
+# `public/storage` symlink). Nothing here may execute or render as active
+# content: a stored .php/.html/.svg would otherwise run or script in the
+# application's own origin.
+Options -Indexes -ExecCGI
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+RemoveHandler .php .phtml .phps .php3 .php4 .php5 .php7 .php8 .cgi .pl .py
+RemoveType .php .phtml .phps .php3 .php4 .php5 .php7 .php8 .cgi .pl .py
+
+# Dotfiles (.env, .htaccess, editor leftovers) are never public.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Anything that could execute or render is forced to a download.
+<FilesMatch "\.(php|phtml|phps|php[0-9]|cgi|pl|py|sh|html?|xhtml|svgz?|xml|js|mjs)$">
+    ForceType application/octet-stream
+    <IfModule mod_headers.c>
+        Header set Content-Disposition "attachment"
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

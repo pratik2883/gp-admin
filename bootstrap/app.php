@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Applies to the API, the Filament panel and the public pages alike.
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         // Only trust proxies we explicitly opt into via TRUSTED_PROXIES
         // (comma-separated IPs/CIDRs, or `*`). Behind Nginx/Cloudflare an
         // untrusted-proxy setup collapses every caller onto the proxy IP, which

@@ -21,7 +21,16 @@ class DeviceTokenController extends Controller
 
         $token = DeviceToken::query()->where('token', $data['token'])->first();
         if ($token) {
-            $token->user_id = $user->id;
+            // A push token identifies one installed app, not a user. Letting a
+            // caller re-own an existing token would redirect another account's
+            // notifications to their device; the old account must log out
+            // (which deletes the token) before the device can be reused.
+            if ((int) $token->user_id !== (int) $user->id) {
+                return response()->json([
+                    'message' => 'This device token belongs to another account.',
+                ], 409);
+            }
+
             $token->platform = $data['platform'] ?? $token->platform;
             $token->last_seen_at = $now;
             $token->save();

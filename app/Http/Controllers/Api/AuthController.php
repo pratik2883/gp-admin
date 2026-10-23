@@ -21,13 +21,29 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\Rule;
 use RuntimeException;
 
 class AuthController extends Controller
 {
+    /** Password guesses allowed for one mobile number + IP before a lockout. */
+    private const LOGIN_MAX_ATTEMPTS = 10;
+
+    /** How long a locked-out caller has to wait (seconds). */
+    private const LOGIN_LOCKOUT_SECONDS = 900;
+
+    /** Wrong OTP codes tolerated for one destination number. */
+    private const OTP_MAX_ATTEMPTS = 5;
+
+    /**
+     * Compared against when the account does not exist, so a missing user and a
+     * wrong password take the same time to answer (no account enumeration).
+     */
+    private const DUMMY_PASSWORD_HASH = '$2y$12$y0pRq3AWEpb1RAj1M5i0m.7FnxNl9zwM9wXm3ppRSc7p20nt.CH9K';
     // POST /api/auth/login-with-otp
     public function loginWithOtp(Request $request)
     {
@@ -80,13 +96,25 @@ class AuthController extends Controller
             $verificationId = (string) $request->input('verification_id', '');
             $otpCode = (string) $request->input('otp_code', '');
 
+            if ($this->tooManyOtpAttempts($phone)) {
+                return response()->json([
+                    'message' => 'Too many incorrect OTP attempts. Request a new OTP.',
+                ], 429);
+            }
+
             $cached = cache()->get('login_otp_'.$phone);
             if (! is_array($cached)) {
                 return response()->json(['message' => 'Invalid or expired OTP.'], 422);
             }
 
             if (($cached['mode'] ?? '') === 'local') {
-                if ((string) ($cached['otp'] ?? '') !== $otpCode) {
+                $storedOtp = (string) ($cached['otp'] ?? '');
+                $otpMatches = $storedOtp !== ''
+                    && hash_equals($storedOtp, hash('sha256', $otpCode));
+
+                if (! $otpMatches) {
+                    $this->registerFailedOtpAttempt($phone);
+
                     return response()->json(['message' => 'Invalid or expired OTP.'], 422);
                 }
             } else {
@@ -117,6 +145,7 @@ class AuthController extends Controller
             }
 
             cache()->forget('login_otp_'.$phone);
+            cache()->forget($this->otpAttemptKey($phone));
         }
 
         $user = $this->findUserByPhone($phone);
@@ -155,6 +184,33 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * OTP guessing is capped per destination number: the shared `throttle:api`
+     * limiter (120/min per IP) is not an attempt limit for a 6-digit code.
+     */
+    private function otpAttemptKey(string $phone): string
+    {
+        return 'login_otp_attempts:'.$phone;
+    }
+
+    private function tooManyOtpAttempts(string $phone): bool
+    {
+        return (int) cache()->get($this->otpAttemptKey($phone), 0) >= self::OTP_MAX_ATTEMPTS;
+    }
+
+    private function registerFailedOtpAttempt(string $phone): void
+    {
+        $key = $this->otpAttemptKey($phone);
+        $attempts = (int) cache()->get($key, 0) + 1;
+
+        cache()->put($key, $attempts, now()->addMinutes(15));
+
+        if ($attempts >= self::OTP_MAX_ATTEMPTS) {
+            // Burn the challenge so a guesser has to request (and pay for) a new OTP.
+            cache()->forget('login_otp_'.$phone);
+        }
+    }
+
     private function normalizePhone(string $phone): string
     {
         $p = preg_replace('/[^\d+]/', '', $phone) ?? '';
@@ -187,7 +243,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:190',
             'email' => 'nullable|email|max:190|unique:users,email',
             'mobile' => 'required|string|max:20|unique:users,mobile',
-            'password' => 'required|string|min:6',
+            'password' => ['required', 'string', Password::min(8)->letters()->numbers()],
             'role' => ['required', Rule::in(['gp', 'specialist', 'hospital_admin'])],
             'clinic_name' => 'nullable|string|max:190',
             'address_line' => 'nullable|string|max:255',
@@ -195,8 +251,14 @@ class AuthController extends Controller
         ]);
 
         // Check for existing partial registration (user without GP/specialist record)
-        $existingUser = User::where('email', $data['email'])
-            ->orWhere('mobile', $data['mobile'])
+        // `email` is optional; the previous `$data['email']` produced a 500 for
+        // every mobile-only registration.
+        $existingUser = User::query()
+            ->where('mobile', $data['mobile'])
+            ->when(
+                filled($data['email'] ?? null),
+                fn ($query) => $query->orWhere('email', $data['email']),
+            )
             ->first();
 
         if ($existingUser) {
@@ -250,7 +312,7 @@ class AuthController extends Controller
             });
         } catch (\Throwable $e) {
             Log::error('Registration failed: '.$e->getMessage(), [
-                'email' => $data['email'],
+                'email' => $data['email'] ?? null,
                 'mobile' => $data['mobile'],
                 'role' => $data['role'],
                 'trace' => $e->getTraceAsString(),
@@ -284,7 +346,7 @@ class AuthController extends Controller
             'email' => 'nullable|email|max:190|unique:users,email',
             'mobile' => 'required|string|max:20|unique:users,mobile',
             'whatsapp_number' => 'nullable|string|max:20',
-            'password' => 'required|string|min:6',
+            'password' => ['required', 'string', Password::min(8)->letters()->numbers()],
             'role_subtype' => ['required', Rule::in(['specialist', 'hospital'])],
             'subscription_plan_id' => [$paymentsEnabled ? 'required' : 'nullable', 'integer'],
             'specialty_code' => 'nullable|string|max:120',
@@ -495,13 +557,33 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('mobile', $request->mobile)->first();
+        // Keyed by mobile + IP: the generic `throttle:api` limiter allows 120
+        // requests a minute, which is far too much for password guessing.
+        $throttleKey = 'login:'.mb_strtolower((string) $request->input('mobile')).'|'.$request->ip();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (RateLimiter::tooManyAttempts($throttleKey, self::LOGIN_MAX_ATTEMPTS)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            return response()->json([
+                'message' => 'Too many login attempts. Try again in '.max(1, (int) ceil($seconds / 60)).' minute(s).',
+            ], 429)->header('Retry-After', (string) $seconds);
+        }
+
+        $user = User::where('mobile', $request->mobile)->first();
+        $passwordIsValid = Hash::check(
+            (string) $request->input('password'),
+            $user?->password ?: self::DUMMY_PASSWORD_HASH,
+        );
+
+        if (! $user || ! $passwordIsValid) {
+            RateLimiter::hit($throttleKey, self::LOGIN_LOCKOUT_SECONDS);
+
             return response()->json([
                 'message' => 'Invalid credentials',
             ], 422);
         }
+
+        RateLimiter::clear($throttleKey);
 
         if (($user->status ?? 'active') !== 'active') {
             return response()->json([

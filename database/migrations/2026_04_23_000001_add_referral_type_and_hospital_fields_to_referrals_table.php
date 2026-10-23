@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -13,6 +14,21 @@ return new class extends Migration
         }
 
         if (DB::getDriverName() === 'sqlite') {
+            // SQLite backs the test suite; the MySQL DDL below cannot run there,
+            // which left the test schema without columns the API filters on
+            // (specialist referral lists query `referral_type`).
+            Schema::table('referrals', function (Blueprint $table) {
+                if (! Schema::hasColumn('referrals', 'referral_type')) {
+                    $table->string('referral_type')->default('specialist');
+                }
+                if (! Schema::hasColumn('referrals', 'priority')) {
+                    $table->string('priority')->default('routine');
+                }
+                if (! Schema::hasColumn('referrals', 'department')) {
+                    $table->string('department')->nullable();
+                }
+            });
+
             return;
         }
 

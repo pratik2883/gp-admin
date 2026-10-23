@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\Rule;
 
 class DiagnosticCenterAuthController extends Controller
@@ -32,7 +33,7 @@ class DiagnosticCenterAuthController extends Controller
             'name' => 'required_without:center_name|string|max:255',
             'email' => 'required|email|max:190|unique:users,email',
             'mobile_number' => 'required|string|max:20|unique:users,mobile',
-            'password' => 'required|string|min:6',
+            'password' => ['required', 'string', Password::min(8)->letters()->numbers()],
             'subscription_plan_id' => [$paymentsEnabled ? 'required' : 'nullable', 'integer'],
             'location_id' => 'required|integer|exists:locations,id',
             'center_type' => 'required|string|max:80',

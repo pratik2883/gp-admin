@@ -11,6 +11,10 @@ class RazorpayPaymentController extends Controller
 {
     public function mock(string $transactionUuid, string $result)
     {
+        // Belt and braces: the route is only registered outside production, but
+        // an accidentally re-added route must still not activate a plan.
+        abort_unless(app()->environment(['local', 'testing']), 404);
+
         $transaction = SubscriptionTransaction::query()
             ->with(['userSubscription.user'])
             ->where('transaction_uuid', $transactionUuid)

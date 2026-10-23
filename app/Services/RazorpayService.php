@@ -22,12 +22,19 @@ class RazorpayService
     public function paymentsEnabled(): bool
     {
         return (bool) $this->settings->enable_razorpay_payments
-            && ($this->settings->razorpay_mock_mode || $this->hasCredentials());
+            && ($this->isMockMode() || $this->hasCredentials());
     }
 
+    /**
+     * Mock mode is a local-development aid and is deliberately ignored outside
+     * local/testing: it skips signature verification entirely
+     * (`verifyPayment()`), so a leftover toggle on a public host would let any
+     * visitor activate a paid plan.
+     */
     public function isMockMode(): bool
     {
-        return (bool) $this->settings->razorpay_mock_mode;
+        return (bool) $this->settings->razorpay_mock_mode
+            && app()->environment(['local', 'testing']);
     }
 
     public function hasCredentials(): bool

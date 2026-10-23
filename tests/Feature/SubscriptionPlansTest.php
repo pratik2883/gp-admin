@@ -46,7 +46,7 @@ class SubscriptionPlansTest extends TestCase
             'name' => 'Test Specialist',
             'email' => 'test-specialist@example.com',
             'mobile' => '9876543210',
-            'password' => '123456',
+            'password' => 'Passw0rd123',
             'role_subtype' => 'specialist',
             'terms_accepted' => true,
             'subscription_plan_id' => $planId,

@@ -80,18 +80,6 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('logout-all', [AuthController::class, 'logoutAll']);
     Route::post('subscriptions/{subscriptionId}/payment/initiate', [SubscriptionPaymentController::class, 'initiate']);
 
-    // Debug token route to verify Sanctum bearer auth
-    Route::get('debug-token', function (\Illuminate\Http\Request $request) {
-        if (! app()->environment(['local', 'testing'])) {
-            abort(404);
-        }
-
-        return response()->json([
-            'auth' => auth()->check(),
-            'user' => $request->user(),
-        ]);
-    });
-
     // Notifications (common)
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);

@@ -33,7 +33,11 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // The framework registers its own `/storage/{path}` route (named
+            // `storage.local`, signed-URL only) when this is true, which shadows
+            // the upload route in routes/web.php and answers 403 for every
+            // public upload. Keep a single, auditable file route instead.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

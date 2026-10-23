@@ -47,11 +47,13 @@ class SpecialistProfileController extends Controller
         $isSetupRequest = $request->is('api/specialist/setup');
         $requiredRule = 'sometimes';
 
-        Log::info('SP Profile Update - raw input', [
-            'all' => $request->all(),
+        // Only field names: the submitted values carry the doctor's name, mobile,
+        // email, address and practice details, and used to be written to disk in
+        // cleartext on every save.
+        Log::info('SP Profile Update', [
+            'user_id' => $user->id,
+            'fields' => array_keys($request->except(['password', 'password_confirmation'])),
             'files' => array_keys($request->allFiles()),
-            'hospital_name_raw' => $request->input('hospital_name'),
-            'has_profile_photo' => $request->hasFile('profile_photo'),
         ]);
 
         $data = $request->validate([
