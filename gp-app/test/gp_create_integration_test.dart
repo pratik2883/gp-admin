@@ -4,9 +4,22 @@ import 'package:gp_app/core/http/dio_client.dart';
 import 'package:gp_app/core/storage/secure_storage.dart';
 import 'package:gp_app/features/gp/data/gp_repository.dart';
 
+/// Bearer token used against the live API only when tests run against the
+/// default base URL. Point the suite at a local server instead with:
+///   flutter test --dart-define=BASE_URL=http://127.0.0.1:8010 \
+///                 --dart-define=IN_TEST_TOKEN=<sanctum token>
+const String _fallbackToken = String.fromEnvironment(
+  'IN_TEST_TOKEN',
+  defaultValue: '12|fgbnZWMOVtrsIdsmKlBvKe1wIO4u6RYwVR5WEcNLc07703f2',
+);
+
+/// Environment wins over the compile-time define, because a Sanctum token
+/// contains a `|` that cmd.exe mangles when passed as a --dart-define value.
+final String _token = Platform.environment['IN_TEST_TOKEN'] ?? _fallbackToken;
+
 class _TokenStorage extends AppSecureStorage {
   @override
-  Future<String?> readToken() async => '12|fgbnZWMOVtrsIdsmKlBvKe1wIO4u6RYwVR5WEcNLc07703f2';
+  Future<String?> readToken() async => _token;
   @override
   Future<String?> readRole() async => 'gp';
 }
