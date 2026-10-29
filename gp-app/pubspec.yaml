@@ -1,7 +1,7 @@
 name: gp_app
 description: GP mobile app for Laravel Sanctum backend
 publish_to: "none"
-version: 0.2.5+7
+version: 0.2.6+8
 environment:
   sdk: ">=3.3.0 <4.0.0"
 dependencies:
